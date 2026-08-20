@@ -1,0 +1,6 @@
+{
+    "server_url": "https://10.0.3.2",
+    "login_script": "ilogin",
+    "logout_script": "ilogout",
+    "status_script": "iloginwh"
+}

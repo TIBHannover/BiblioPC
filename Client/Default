@@ -1,0 +1,3 @@
+#!/bin/sh
+/usr/local/bin/una-reset.sh
+exit 0

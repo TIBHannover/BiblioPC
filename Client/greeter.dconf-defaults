@@ -1,0 +1,47 @@
+# These are the options for the greeter session that can be set 
+# through GSettings. Any GSettings setting that is used by the 
+# greeter session can be set here.
+
+# Note that you must configure the path used by dconf to store the 
+# configuration, not the GSettings path.
+
+
+# Theming options
+# ===============
+#  - Change the GTK+ theme
+[org/gnome/desktop/interface]
+# gtk-theme='Adwaita'
+#  - Use another background
+[org/gnome/desktop/background]
+#picture-uri='file:///usr/share/backgrounds/TIB.jpg'
+#picture-options='zoom'
+#  - Or no background at all
+[org/gnome/desktop/background]
+# picture-options='none'
+# primary-color='#000000'
+
+# Login manager options
+# =====================
+[org/gnome/login-screen]
+#logo='/usr/share/icons/TIB_Logo.png'
+
+# - Disable user list
+disable-user-list=true
+# - Disable restart buttons
+disable-restart-buttons=true
+# - Show a login welcome message
+banner-message-enable=true
+banner-message-text='𝗪𝗶𝗹𝗹𝗸𝗼𝗺𝗺𝗲𝗻 𝗮𝗺 𝗣𝗖-𝗔𝗿𝗯𝗲𝗶𝘁𝘀𝗽𝗹𝗮𝘁𝘇\n\nBitte melden Sie sich mit Bibliotheksausweisnummer und Passwort an.\n\nSollte bei der Anmeldung ein Fehler auftreten, drücken Sie die Esc-Taste und probieren es erneut.\n\n𝗪𝗲𝗹𝗰𝗼𝗺𝗲 𝘁𝗼 𝘁𝗵𝗲 𝗽𝘂𝗯𝗹𝗶𝗰 𝗣𝗖\n\nPlease log in using your library card number and password.\n\nIf an error occurs during login, press Esc key and try again.'
+
+# Automatic suspend
+# =================
+[org/gnome/settings-daemon/plugins/power]
+# - Time inactive in seconds before suspending with AC power
+#   1200=20 minutes, 0=never
+# sleep-inactive-ac-timeout=1200
+# - What to do after sleep-inactive-ac-timeout
+#   'blank', 'suspend', 'shutdown', 'hibernate', 'interactive' or 'nothing'
+# sleep-inactive-ac-type='suspend'
+# - As above but when on battery
+# sleep-inactive-battery-timeout=1200
+# sleep-inactive-battery-type='suspend'

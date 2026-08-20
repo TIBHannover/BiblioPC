@@ -1,0 +1,16 @@
+#%PAM-1.0
+
+# 1. Das Python-Modul prüft die Identität gegen /dev/shm/benutzernummer und die API
+auth [success=done default=ignore] pam_python.so /usr/local/lib/security/una_auth.py
+
+# 2. Falls das Skript 'ignore' liefert, greift die Standard-Authentifizierung
+# (Wichtig, falls Admins sich lokal mit Passwort am Lockscreen legitimieren müssen)
+@include common-auth
+
+# 3. Standard Account-Prüfung
+@include common-account
+
+# 4. Session-Management für den Lockscreen
+# Erlaubt dem System, den Keyring beim Entsperren wieder zu öffnen
+auth      optional      pam_gnome_keyring.so
+@include common-session
