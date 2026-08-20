@@ -1,0 +1,61 @@
+set -x
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+# The following packages are required for the PAM module and the greeter configuration
+apt-get install -y libpam-python python3-tk python3-requests dos2unix
+# Unzip the una-master.zip file to /opt and set the correct permissions for the una-user home directory
+unzip -o "$installerSourceDir$/una-master.zip" -d /opt
+rm -rf /home/una-user
+mkdir /home/una-user
+chown una-user:una-user /home/una-user
+chmod 755 /home/una-user
+rm -rf /opt/una-master/*Overlay*
+# Modify the logind.conf file to set NAutoVTs to 1 and ReserveVT to 0
+sed -i 's/#NAutoVTs=6/NAutoVTs=1/' /etc/systemd/logind.conf
+sed -i 's/#ReserveVT=6/ReserveVT=0/' /etc/systemd/logind.conf
+# Copy the necessary files to their respective locations
+cp "$installerSourceDir$/greeter.dconf-defaults" /etc/gdm3/greeter.dconf-defaults
+cp "$installerSourceDir$/TIB.jpg" /usr/share/backgrounds/TIB.jpg
+cp "$installerSourceDir$/TIB_Logo.png" /usr/share/icons/TIB_Logo.png
+cp "$installerSourceDir$/TIB_Logo.png" /opt/una-master/.face
+mkdir -p /usr/local/lib/security/
+cp "$installerSourceDir$/una_auth.py" /usr/local/lib/security/una_auth.py
+chown root:root /usr/local/lib/security/una_auth.py
+chmod 644 /usr/local/lib/security/una_auth.py
+cp "$installerSourceDir$/common-session" /etc/pam.d/common-session
+dos2unix /etc/pam.d/common-session
+cp "$installerSourceDir$/una-config.json" /usr/local/etc/una-config.json
+cp "$installerSourceDir$/gdm-password" /etc/pam.d/gdm-password
+dos2unix /etc/pam.d/gdm-password
+cp "$installerSourceDir$/gnome-screensaver" /etc/pam.d/gnome-screensaver
+dos2unix /etc/pam.d/gnome-screensaver 
+cp "$installerSourceDir$/una-reset.sh" /usr/local/bin/una-reset.sh
+dos2unix /usr/local/bin/una-reset.sh
+chmod +x /usr/local/bin/una-reset.sh
+cp "$installerSourceDir$/Default" /etc/gdm3/PostSession/Default
+dos2unix /etc/gdm3/PostSession/Default
+cp "$installerSourceDir$/timer.py" /usr/local/bin/timer.py
+chmod +x /usr/local/bin/timer.py
+cp "$installerSourceDir$/hinweis.py" /usr/local/bin/hinweis.py
+chmod +x /usr/local/bin/hinweis.py
+cp "$installerSourceDir$/auto-logout-screensaver.sh" /usr/local/bin/auto-logout-screensaver.sh
+chmod +x /usr/local/bin/auto-logout-screensaver.sh
+cp "$installerSourceDir$/auto-logout.desktop" /etc/xdg/autostart/auto-logout.desktop
+chmod +x /etc/xdg/autostart/auto-logout.desktop
+mkdir -p /etc/polkit-1/rules.d
+cp "$installerSourceDir$/49-una-kiosk.rules" /etc/polkit-1/rules.d/49-una-kiosk.rules
+dos2unix /etc/polkit-1/rules.d/49-una-kiosk.rules
+mkdir -p /etc/dconf/profile/
+cp "$installerSourceDir$/user" /etc/dconf/profile/user
+dos2unix /etc/dconf/profile/user
+mkdir -p /etc/dconf/db/local.d
+cp "$installerSourceDir$/00-kiosk" /etc/dconf/db/local.d/00-kiosk
+dos2unix /etc/dconf/db/local.d/00-kiosk
+mkdir -p /etc/dconf/db/local.d/locks/
+cp "$installerSourceDir$/kiosk" /etc/dconf/db/local.d/locks/kiosk
+dos2unix /etc/dconf/db/local.d/locks/kiosk
+# Update dconf to apply the changes
+dconf update
+# Anzeige des Benutzernamens auf Hinweis ändern:
+usermod -c "Dieser PC ist aktuell gesperrt" una-user
+exit $?
