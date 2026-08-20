@@ -13,7 +13,7 @@ Der Rechner vor Ort (Ubuntu-**Client**) ist ein öffentlich zugänglicher Comput
 Wenn auf dem Linux-Server Docker eingerichtet ist, kann einfach mit Docker-Compose und der Python Webapp **BiblioPC** gestartet werden:
 
 ```bash
-git clone https://git.tib.eu/imhorstch/bibliopc.git
+git clone https://github.com/TIBHannover/BiblioPC.git
 ```
 
 Anschließend die Datei mit den Umgebungsvariablen ```.env``` anpassen und einen eigenen Secret-Key eintragen wie z.B.
