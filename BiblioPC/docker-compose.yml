@@ -1,0 +1,28 @@
+services:
+  # HTTPS-Reverse-Proxy
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    container_name: nginx-https-proxy
+    restart: unless-stopped
+    ports:
+      - 443:443
+    depends_on:
+      - web # Proxy wartet auf das Backend.
+
+  # Python-Backend
+  web:
+    build:
+      context: ./BiblioPCApp
+      dockerfile: Dockerfile
+    container_name: python-fastapi
+    restart: unless-stopped
+    environment:
+      TZ: 'Europe/Amsterdam'
+    env_file:
+      - .env
+    volumes:
+      - ./BiblioPCApp/src:/app
+    dns:
+      - ${DNS_SERVER_1:-}

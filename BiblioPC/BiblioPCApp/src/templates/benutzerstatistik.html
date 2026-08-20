@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Benutzerstatistik{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="/static/flatpickr/flatpickr.min.css">
+    
+    <h1>Benutzerstatistik</h1>
+    
+    <form action="/benutzerstatistik" method="POST" class="flex-form" style="justify-content: center; gap: 20px; align-items: flex-end;">
+        <div class="form-group" style="width: 35%; margin-bottom: 0;">
+            <label for="BenNr">Benutzernummer eingeben:</label>
+            <input type="text" id="BenNr" name="ben_nr" value="{{ ben_nr or '' }}" placeholder="z.B. 123456" required>
+        </div>
+        
+        <div class="form-group" style="width: 25%; margin-bottom: 0;">
+            <label for="AusgewaehltesDatum">Datum filtern:</label>
+            <input type="text" id="AusgewaehltesDatum" name="ausgewaehltes_datum" class="datepicker" value="{{ selected_date or '' }}" placeholder="Datum wählen" required>
+        </div>
+
+        <div class="form-group" style="width: 15%; margin-bottom: 0;">
+            <input type="submit" value="Historie abrufen" style="width: 100%; height: 42px;">
+        </div>
+    </form>
+
+    {% if error_message %}
+        <div class="alert error-alert" style="padding: 15px; margin: 20px auto; width: 60%; border-radius: 4px; font-weight: bold; background-color: #fde8e8; color: #e53935; border: 1px solid #fca5a5; text-align: center;">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+    {% if ben_nr and not error_message %}
+        <hr style="border: 0; border-top: 1px solid #ddd; margin: 40px 0;">
+        
+        <h2>Statistik für Benutzernummer: <span style="color: #007BFF;">{{ ben_nr }}</span> am <span style="color: #2E7D32;">{{ am_datum_formatiert }}</span></h2>
+
+        <div style="background-color: #f8f9fa; border-left: 5px solid #007BFF; padding: 20px; margin: 20px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0 0 10px 0; color: #333;">Aktuelles Wochen-Zeitkonto (Laufende Woche)</h3>
+                {% if konto %}
+                    <p style="margin: 5px 0; font-size: 1.1em;">
+                        Insgesamt: <strong>{{ konto.Max[:5] }} (Std:Min)</strong>
+                    </p>
+                    <p style="margin: 5px 0; font-size: 1.1em; color: #C62828;">
+                        Verbraucht: <strong>{{ konto.Used[:5] }} (Std:Min)</strong>
+                    </p>
+                {% else %}
+                    <p style="margin: 5px 0; font-size: 1.1em; color: #666; font-style: italic;">
+                        Noch keine Sitzungsdaten für diese Woche vorhanden (Konto ist unberührt).
+                    </p>
+                    <p style="margin: 5px 0; font-size: 1.1em;">Standardlimit: <strong>14:00 Stunden</strong></p>
+                {% endif %}
+            </div>
+            
+            <div style="text-align: right; background: #fff; padding: 15px 25px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;">
+                <span style="font-size: 0.9em; text-transform: uppercase; color: #666; font-weight: bold; display: block; margin-bottom: 5px;">Verbleibendes Guthaben</span>
+                <span style="font-size: 2em; font-weight: bold; color: #2E7D32; font-family: monospace;">
+                    {{ guthaben }}
+                </span>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 40px;">PC-Aktivitäten am gewählten Tag (Absteigend sortiert)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Aktion</th>
+                    <th>Datum</th>
+                    <th>Uhrzeit</th>
+                    <th>IP-Adresse</th>
+                    <th>PC-Name (Host)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if log_data %}
+                    {% for row in log_data %}
+                        <tr>
+                            <td>
+                                {% if row.LogAkt == 'I' %}
+                                    <span style="background-color: #E8F5E9; color: #2E7D32; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Login</span>
+                                {% elif row.LogAkt == 'O' %}
+                                    <span style="background-color: #ECEFF1; color: #455A64; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Logout</span>
+                                {% elif row.LogAkt == 'S' %}
+                                    <span style="background-color: #FFF3E0; color: #E65100; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Sperre</span>
+                                {% elif row.LogAkt == 'X' %}
+                                    <span style="background-color: #FFEBEE; color: #C62828; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Konto gesperrt</span>
+                                {% elif row.LogAkt == 'Z' %}
+                                    <span style="background-color: #FFFDE7; color: #F57F17; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Zeit abgelaufen</span>
+                                {% elif row.LogAkt == 'P' %}
+                                    <span style="background-color: #FFEBEE; color: #C62828; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; border: 1px dashed #C62828;">Passwort falsch</span>
+                                {% elif row.LogAkt == 'A' %}
+                                    <span style="background-color: #F3E5F5; color: #4A148C; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Mehrfach-Login</span>
+                                {% else %}
+                                    <span style="background-color: #eee; color: #333; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">{{ row.LogAkt }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ row.Datum.strftime('%d.%m.%Y') if row.Datum else '' }}</td>
+                            <td>{{ row.Zeit }}</td>
+                            <td><code>{{ row.IP }}</code></td>
+                            <td>{{ row.Host or '' }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #666; font-style: italic; padding: 20px;">Keine Protokolleinträge zu dieser Benutzernummer an diesem Tag aufgezeichnet.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <script src="/static/flatpickr/flatpickr.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            flatpickr(".datepicker", {
+                dateFormat: "Y-m-d", // Liefert YYYY-MM-DD an das Python Backend
+                altInput: true,
+                altFormat: "d.m.Y",  // Zeigt dem Bibliothekar lesbares DD.MM.YYYY
+                defaultDate: "{{ selected_date or 'today' }}" // Behält das gewählte Datum oder setzt heute als Standard
+            });
+        });
+    </script>
+{% endblock %}

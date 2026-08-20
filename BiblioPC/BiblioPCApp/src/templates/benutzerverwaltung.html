@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Benutzerverwaltung{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/flatpickr/flatpickr.min.css">
+    <script src="/static/flatpickr/flatpickr.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h1>Lokale Benutzerverwaltung</h1>
+    <p>Eine Benutzerkennung erstellen, wenn kein Bibliothekskonto vorhanden ist.</p>
+    <br />
+
+    {% if error_message %}
+        <div class="alert error-alert" style="padding: 15px; margin-bottom: 20px; border-radius: 4px; font-weight: bold; background-color: #fde8e8; color: #e53935; border: 1px solid #fca5a5;">
+            {{ error_message }}
+        </div>
+    {% endif %}    {% if success_message %}
+        <div class="alert success-alert" style="padding: 15px; margin: 20px auto; width: 60%; border-radius: 4px; font-weight: bold; background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; text-align: center;">
+            {{ success_message }}
+        </div>
+    {% endif %}
+    <form action="/benutzerverwaltung" method="POST" class="flex-form">
+        <div class="form-group">
+            <label for="BenNr">Benutzernummer (max. 12 Zeichen):</label>
+            <input type="text" id="BenNr" name="ben_nr" maxlength="12" required>
+        </div>
+        <div class="form-group">
+            <label for="Pw">Passwort (max. 8 Zeichen):</label>
+            <input type="text" id="Pw" name="pw" maxlength="8" required>
+        </div>
+        <div class="form-group">
+            <label for="Von">Von:</label>
+            <input type="text" id="Von" name="von" class="datepicker" required>
+        </div>
+        <div class="form-group">
+            <label for="Bis">Bis:</label>
+            <input type="text" id="Bis" name="bis" class="datepicker" required>
+        </div>
+        <div class="form-group">
+            &nbsp;
+        </div>
+        <div class="form-group">
+            <label for="Bemerkungen">Bemerkungen:</label>
+            <textarea id="Bemerkungen" name="bemerkungen"></textarea>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Benutzer hinzufügen">
+        </div>
+    </form>
+
+    <h2>Lokale Benutzer</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Benutzernummer</th>
+                <th>Status</th>
+                <th>Von</th>
+                <th>Bis</th>
+                <th>Bearbeiter</th>
+                <th>Bemerkung</th>
+                <th>Eintrag</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if local_users %}
+                {% for u in local_users %}
+                    <tr>
+                        <td>{{ u.BenNr }}</td>
+                        <td>{{ u.Pw }}</td>
+                        <td>{{ u.Von.strftime('%d.%m.%Y') if u.Von else '' }}</td>
+                        <td>{{ u.Bis.strftime('%d.%m.%Y') if u.Bis else '' }}</td>
+                        <td>{{ u.Bearb or '' }}</td>
+                        <td>{{ u.Bemerkungen or '' }}</td>
+                        <td>{{ u.Datum.strftime('%d.%m.%Y %H:%M:%S') if u.Datum else '' }}</td>
+                        <td>
+                            <a href="/benutzerverwaltung/loeschen/{{ u.BenNr }}" 
+                               class="delete-btn" 
+                               onclick="return confirm('Möchten Sie diesen lokalen Benutzer wirklich löschen?');">Löschen</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8">Keine lokalen Benutzer gefunden.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+<script>
+    // Flatpickr Initialisierung für die Datumsfelder
+    flatpickr(".datepicker", {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d H:i:S"
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Bearbeiterverwaltung{% endblock %}
+
+{% block content %}
+    <h1>Bearbeiterverwaltung</h1>
+    
+    {% if error_message %}
+        <div class="alert error-alert">
+            {{ error_message }}
+        </div>
+    {% endif %}
+    
+    {% if success_message %}
+        <div class="alert success-alert">
+            {{ success_message }}
+        </div>
+    {% endif %}
+
+    <div class="form-container" style="margin-bottom: 30px;">
+        <h2>Neuen Bearbeiter:in anlegen</h2>
+        <form action="/bearbeiterverwaltung" method="POST">
+            <div class="form-group-full">
+                <label for="bearb_name">Benutzername (Kürzel):</label>
+                <input type="text" id="bearb_name" name="bearb_name" required>
+            </div>
+            
+            <div class="form-group-full">
+                <label for="passwort">Passwort:</label>
+                <input type="password" id="passwort" name="passwort" required>
+            </div>
+            
+            <div class="form-actions">
+                <input type="submit" value="Bearbeiter hinzufügen">
+            </div>
+        </form>
+    </div>
+
+    <hr>
+
+    <h2>Registrierte Bearbeiter</h2>
+    <table class="table-full">
+        <thead>
+            <tr>
+                <th>Benutzername / Kürzel</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in bearbeiter_liste %}
+                <tr>
+                    <td><strong>{{ b.Bearb }}</strong></td>
+                    <td>
+                        {% if b.Bearb == 'useradmin' %}
+                            <span class="text-muted" style="color: #999; font-style: italic;">System-Admin (Gesperrt)</span>
+                        {% else %}
+                            <a href="/bearbeiterverwaltung/loeschen/{{ b.id }}" 
+                               class="btn-delete" 
+                               onclick="return confirm('Möchtest du den Bearbeiter {{ b.Bearb }} wirklich löschen?');"
+                               style="color: #d9534f; text-decoration: none; font-weight: bold;">
+                               Löschen
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

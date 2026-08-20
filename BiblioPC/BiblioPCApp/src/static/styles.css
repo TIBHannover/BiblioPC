@@ -1,0 +1,219 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 50px;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #333;
+    margin: 1.5em;
+}
+
+form {
+    margin-bottom: 30px;
+}
+
+.flex-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.form-group {
+    width: 48%;
+    margin-bottom: 15px;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background-color: #2B3C46;
+    color: white;
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+    padding: 8px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.delete-btn:hover {
+    background-color: #c62828;
+}
+
+/* Styles für das Navigationsmenü */
+.navbar {
+    background-color: #ddd;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.navbar ul li {
+    float: left;
+}
+
+.navbar ul li.logout {
+    float: right;
+}
+
+.navbar ul li.logout a {
+    display: block;
+    background-color: #f44336; /* Hellrot */
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.navbar ul li.logout a:hover {
+    background-color: #c62828; /* Dunkelrot beim Hover */
+    color: #fff; /* Textfarbe beim Hover */
+}
+
+.navbar ul li a {
+    display: block;
+    background-color: #ddd;
+    color: #2B3C46;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.navbar a:hover {
+    background-color: #2B3C46;
+    color: #ddd;
+}
+
+/* Dropdown-Menü */
+
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+.custom-select-wrapper select {
+    appearance: none; /* Verstecke das Standard-Dropdown-Pfeil */
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.custom-select-wrapper select:focus {
+    border-color: #007BFF; /* Fokussierter blauer Rand */
+}
+
+.custom-select-wrapper::after {
+    content: '\25BC'; /* Unicode für Pfeil nach unten */
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #333;
+    pointer-events: none;
+}
+
+.custom-select-wrapper:hover select {
+    border-color: #007BFF; /* Randfarbe bei Hover */
+}
+
+/* Ergänzungen für die Passwort-ändern-Seite */
+
+.form-group-full {
+    margin-bottom: 20px;
+}
+
+.form-actions {
+    margin-top: 25px;
+    text-align: right;
+}
+
+/* Styling für die Hinweismeldungen */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.error-alert {
+    background-color: #fde8e8;
+    color: #e53935;
+    border: 1px solid #fca5a5;
+}
+
+.success-alert {
+    background-color: #def7ec;
+    color: #0e9f6e;
+    border: 1px solid #84e1bc;
+}

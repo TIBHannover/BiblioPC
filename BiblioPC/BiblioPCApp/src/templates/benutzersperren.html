@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Benutzer Sperren{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/flatpickr/flatpickr.min.css">
+    <script src="/static/flatpickr/flatpickr.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h1>Benutzer Sperren</h1>
+    <p>Die Sperre wirkt im definierten Zeitraum sofort und so lange, bis sie über "Löschen" wieder entfernt wird.</p><br />
+
+    {% if error_message %}
+        <div class="alert error-alert" style="padding: 15px; margin-bottom: 20px; border-radius: 4px; font-weight: bold; background-color: #fde8e8; color: #e53935; border: 1px solid #fca5a5;">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+    <form action="/benutzersperren" method="POST" class="flex-form">
+        <div class="form-group">
+            <label for="BenNr">Benutzernummer:</label>
+            <input type="text" id="BenNr" name="ben_nr" maxlength="12" required>
+        </div>
+        <div class="form-group">
+            <label for="Von">Gesperrt von:</label>
+            <input type="text" id="Von" name="von" class="datepicker" required>
+        </div>
+        <div class="form-group">
+            <label for="Bis">Gesperrt bis:</label>
+            <input type="text" id="Bis" name="bis" class="datepicker" required>
+        </div>
+        <div class="form-group">
+            <label for="Bemerkungen">Bemerkungen:</label>
+            <textarea id="Bemerkungen" name="bemerkungen" required></textarea>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Benutzer sperren">
+        </div>
+    </form>
+
+    <h2>Gesperrte Benutzer</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Benutzernummer</th>
+                <th>Gesperrt von</th>
+                <th>Gesperrt bis</th>
+                <th>Bearbeiter</th>
+                <th>Bemerkung</th>
+                <th>Eintrag</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if blocked_users %}
+                {% for u in blocked_users %}
+                    <tr>
+                        <td>{{ u.BenNr }}</td>
+                        <td>{{ u.Von.strftime('%d.%m.%Y') if u.Von else '' }}</td>
+                        <td>{{ u.Bis.strftime('%d.%m.%Y') if u.Bis else '' }}</td>
+                        <td>{{ u.Bearb or '' }}</td>
+                        <td>{{ u.Bemerkungen or '' }}</td>
+                        <td>{{ u.Datum.strftime('%d.%m.%Y %H:%M:%S') if u.Datum else '' }}</td>
+                        <td>
+                            <a href="/benutzersperren/loeschen/{{ u.BenNr }}" 
+                               class="delete-btn" 
+                               onclick="return confirm('Möchten Sie diese Sperre wirklich löschen?');">Löschen</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7">Keine Sperren vorhanden.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <script>
+        flatpickr(".datepicker", {
+            enableTime: false,
+            dateFormat: "Y-m-d"
+        });
+    </script>
+{% endblock %}

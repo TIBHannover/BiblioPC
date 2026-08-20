@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BiblioPC Admin{% endblock %}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<div class="container">
+    <nav class="navbar">
+        <ul>
+            <li><a href="/uebersicht">Aktiv</a></li>
+            <li><a href="/benutzerverwaltung">Verwaltung</a></li>
+            <li><a href="/benutzersperren">Sperren</a></li>
+            <li><a href="/benutzerzeitkontingent">Zeitkontingente</a></li>
+            <li><a href="/benutzerstatistik">Benutzerstatistik</a></li>
+            <li><a href="/tagesprotokoll">Tagesprotokoll</a></li>
+            <li><a href="/bearbeiterverwaltung">Bearbeiter</a></li>
+            <li><a href="/passwort-aendern">Passwort</a></li>
+            <li class="logout"><a href="/logout">Abmelden</a></li>
+        </ul>
+    </nav>
+
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

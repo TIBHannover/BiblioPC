@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Tagesprotokoll der PCs{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="/static/flatpickr/flatpickr.min.css">
+    
+    <h1>Tagesprotokoll der Terminal-PCs</h1>
+    
+    <form action="/tagesprotokoll" method="POST" style="display: flex; justify-content: center; gap: 15px; align-items: flex-end; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 30px;">
+        
+        <div style="display: flex; flex-direction: column; width: 25%;">
+            <label for="Datum" style="font-weight: bold; margin-bottom: 8px; color: #333; font-size: 0.95em;">Datum auswählen:</label>
+            <input type="text" id="Datum" name="datum" class="datepicker" value="{{ selected_date or '' }}" required onchange="this.form.submit()" 
+                   style="width: 100%; height: 42px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1em;">
+        </div>
+        
+        <div style="display: flex; flex-direction: column; width: 40%;">
+            <label for="Host" style="font-weight: bold; margin-bottom: 8px; color: #333; font-size: 0.95em;">Verfügbare PCs an diesem Tag:</label>
+            <select id="Host" name="host" required onchange="this.form.submit()" 
+                    style="width: 100%; height: 42px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1em; background-color: #fff; appearance: none; -webkit-appearance: none;">
+                <option value="">-- Bitte PC (Host) auswählen --</option>
+                {% for h in hosts %}
+                    <option value="{{ h }}" {% if selected_host == h %}selected{% endif %}>{{ h }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="width: 15%;">
+            <input type="submit" value="Aktualisieren" 
+                   style="width: 100%; height: 42px; background-color: #00c853; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 1em; cursor: pointer; transition: background-color 0.2s; box-sizing: border-box;">
+        </div>
+    </form>
+
+    {% if error_message %}
+        <div class="alert error-alert" style="padding: 15px; margin: 20px auto; width: 60%; border-radius: 4px; font-weight: bold; background-color: #fde8e8; color: #e53935; border: 1px solid #fca5a5; text-align: center;">
+            {{ error_message }}
+        </div>
+    {% endif %}
+    
+    {% if selected_host and protokoll_data %}
+        <hr style="border: 0; border-top: 1px solid #ddd; margin: 40px 0;">
+        
+        <h2>Protokollübersicht für <span style="color: #007BFF;">{{ selected_host }}</span> am <span style="color: #2E7D32;">{{ am_datum_formatiert }}</span></h2>
+        
+        <p style="font-size:.85em; background-color: #f8f9fa; padding: 10px; border-radius: 4px; border-left: 4px solid #6c757d;">
+            <strong>Legende Aktionen:</strong> <br>
+            <span style="color: #2E7D32; font-weight:bold;">I</span> = Login (Erfolgreich) | 
+            <span style="color: #455A64; font-weight:bold;">O</span> = Logout | 
+            <span style="color: #E65100; font-weight:bold;">S</span> = PC-Sperre | 
+            <span style="color: #C62828; font-weight:bold;">X</span> = Konto gesperrt | 
+            <span style="color: #F57F17; font-weight:bold;">Z</span> = Zeit abgelaufen | 
+            <span style="color: #C62828; font-weight:bold; border-bottom: 1px dashed;">P</span> = Passwort falsch | 
+            <span style="color: #4A148C; font-weight:bold;">A</span> = Mehrfach-Login
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Uhrzeit</th>
+                    <th>Aktion / Status</th>
+                    <th>Benutzernummer</th>
+                    <th>IP-Adresse</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in protokoll_data %}
+                    <tr>
+                        <td style="font-family: monospace; font-weight: bold; font-size: 1.05em;">{{ row.Zeit }}</td>
+                        <td>
+                            {% if row.LogAkt == 'I' %}
+                                <span style="background-color: #E8F5E9; color: #2E7D32; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Login erfolgreich</span>
+                            {% elif row.LogAkt == 'O' %}
+                                <span style="background-color: #ECEFF1; color: #455A64; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Abgemeldet (Logout)</span>
+                            {% elif row.LogAkt == 'S' %}
+                                <span style="background-color: #FFF3E0; color: #E65100; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">PC gesperrt</span>
+                            {% elif row.LogAkt == 'X' %}
+                                <span style="background-color: #FFEBEE; color: #C62828; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Konto gesperrt</span>
+                            {% elif row.LogAkt == 'Z' %}
+                                <span style="background-color: #FFFDE7; color: #F57F17; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Zeit abgelaufen</span>
+                            {% elif row.LogAkt == 'P' %}
+                                <span style="background-color: #FFEBEE; color: #C62828; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; border: 1px dashed #C62828;">Passwort falsch</span>
+                            {% elif row.LogAkt == 'A' %}
+                                <span style="background-color: #F3E5F5; color: #4A148C; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">Mehrfach-Login</span>
+                            {% else %}
+                                <span style="background-color: #eee; color: #333; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">{{ row.LogAkt }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="/benutzerstatistik" method="POST" style="display:inline;">
+                                <input type="hidden" name="ben_nr" value="{{ row.BenNr }}">
+                                <input type="hidden" name="ausgewaehltes_datum" value="{{ selected_date }}">
+                                <button type="submit" style="background: none; border: none; color: #007BFF; text-decoration: underline; cursor: pointer; padding: 0; font-size: 1em; font-family: inherit;">
+                                    {{ row.BenNr }}
+                                </button>
+                            </form>
+                        </td>
+                        <td><code>{{ row.IP }}</code></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif selected_host %}
+        <p style="text-align: center; color: #666; font-style: italic; margin-top: 30px;">Wähle einen PC aus der Liste, um dessen Historie anzuzeigen.</p>
+    {% endif %}
+
+    <script src="/static/flatpickr/flatpickr.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            flatpickr(".datepicker", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d.m.Y"
+            });
+        });
+    </script>
+{% endblock %}

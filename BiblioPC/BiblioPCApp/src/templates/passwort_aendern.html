@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Passwort ändern{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{% endblock %}
+
+{% block content %}
+
+    <h1>Passwort ändern</h1>
+    
+    {% if error_message %}
+        <div class="alert error-alert">
+            {{ error_message }}
+        </div>
+    {% endif %}
+    
+    {% if success_message %}
+        <div class="alert success-alert">
+            {{ success_message }}
+        </div>
+    {% endif %}
+
+    <form action="/passwort-aendern" method="POST">
+        <div class="form-group-full">
+            <label for="alt_pw">Aktuelles Passwort:</label>
+            <input type="password" id="alt_pw" name="alt_pw" required>
+        </div>
+        
+        <div class="form-group-full">
+            <label for="neu_pw">Neues Passwort:</label>
+            <input type="password" id="neu_pw" name="neu_pw" required>
+        </div>
+        
+        <div class="form-group-full">
+            <label for="neu_pw_wdh">Neues Passwort wiederholen:</label>
+            <input type="password" id="neu_pw_wdh" name="neu_pw_wdh" required>
+        </div>
+        
+        <div class="form-actions">
+            <input type="submit" value="Passwort jetzt aktualisieren">
+        </div>
+    </form>
+{% endblock %}

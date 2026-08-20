@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Zeitkontingente ändern{% endblock %}
+
+{% block content %}
+    <h1>Zeitkontingente ändern</h1>
+    <p>Das Zeitkontingent für eine Benutzernummer erhöhen, falls das reguläre Standard-Zeitlimit bereits aufgebraucht wurde.</p>
+    <br />
+
+    {% if error_message %}
+        <div class="alert error-alert" style="padding: 15px; margin-bottom: 20px; border-radius: 4px; font-weight: bold; background-color: #fde8e8; color: #e53935; border: 1px solid #fca5a5;">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+    <form action="/benutzerzeitkontingent" method="POST" class="flex-form">
+        <div class="form-group">
+            <label for="BenNr">Benutzernummer:</label>
+            <input type="text" id="BenNr" name="ben_nr" maxlength="12" required>
+        </div>
+        <div class="form-group">
+            <label for="Max">Neues Zeitlimit (Gesamtstunden):</label>
+            <input type="text" id="Max" name="max_stunden" maxlength="3" placeholder="20" required style="width: 6ch;">
+        </div>
+        <div class="form-group">
+            <label for="Bemerkungen">Bemerkungen:</label>
+            <textarea id="Bemerkungen" name="bemerkungen"></textarea>
+        </div>
+        <div class="form-group">
+            &nbsp;
+        </div>
+        <div class="form-group" style="width: 100%; text-align: left; margin-top: 10px;">
+            <input type="submit" value="Eintrag hinzufügen">
+        </div>
+    </form>
+
+    <h2>Manuelle Zeitkontingente</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Benutzernummer</th>
+                <th>Von</th>
+                <th>Bis</th>
+                <th>Zeitlimit</th>
+                <th>Verbraucht</th>
+                <th>Bearbeiter</th>
+                <th>Bemerkungen</th>
+                <th>Eintrag am</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if kontingente %}
+                {% for k in kontingente %}
+                    <tr>
+                        <td>{{ k.BenNr }}</td>
+                        <td>{{ k.Von.strftime('%d.%m.%Y') if k.Von else '' }}</td>
+                        <td>{{ k.Bis.strftime('%d.%m.%Y') if k.Bis else '' }}</td>
+                        <td>{{ k.Max }} Std.</td>
+                        <td>{{ k.Used }}</td>
+                        <td>{{ k.Bearb or '' }}</td>
+                        <td>{{ k.Bemerkungen or '' }}</td>
+                        <td>{{ k.Datum.strftime('%d.%m.%Y %H:%M:%S') if k.Datum else '' }}</td>
+                        <td>
+                            <a href="/benutzerzeitkontingent/loeschen/{{ k.BenNr }}" 
+                               class="delete-btn" 
+                               onclick="return confirm('Möchten Sie dieses Zeitkontingent wirklich löschen? Dadurch gilt wieder das Standardlimit.');">Löschen</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="9">Keine manuellen Zeitkontingente für den aktuellen Zeitraum eingetragen.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+{% endblock %}

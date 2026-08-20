@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Benutzerübersicht{% endblock %}
+
+{% block content %}
+    <h1>Aktive Benutzer am {{ datum }} Uhr</h1>
+    <p>Hier werden alle aktiven Benutzernummern angezeigt. Sollte sich eine Benutzernummer vom UNA nicht mehr abmelden lassen, kann sie hier über "Löschen" wieder freigegeben werden.</p><br />
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Benutzernummer</th>
+                <th>Login</th>
+                <th>IP-Adresse</th>
+                <th>Arbeitsplatz</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if users %}
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.BenNr }}</td>
+                        <td>{{ user.Login | datetime_de }}</td>
+                        <td>{{ user.IP }}</td>
+                        <td>{{ user.Host or '' }}</td>
+                        <td>
+                            <a href="/benutzer/loeschen/{{ user.BenNr }}" 
+                               class="delete-btn" 
+                               onclick="return confirm('Möchten Sie diesen Benutzer wirklich löschen?');">Löschen</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5">Keine aktiven Benutzer gefunden.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+{% endblock %}
