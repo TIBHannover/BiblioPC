@@ -1,5 +1,7 @@
 # BiblioPC Admin - Frontend Templates
 
+Jinja2- und HTML5-Templates für das Verwaltungssystem **BiblioPC**.
+
 | Datei | Beschreibung / Verwendungszweck |
 | :--- | :--- |
 | **`base.html`** | Main-Layout und Master-Template. Stellt die HTML5-Grundstruktur, den Head-Bereich sowie die Hauptnavigation bereit. |
