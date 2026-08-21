@@ -4,11 +4,31 @@ An den Standorten der Technischen Informationsbibliothek (TIB) steht unseren Nut
 
 Der Arbeitsplatz besteht aus zwei Hauptkomponenten: 
 
-Das Hintergrundsystem (Backend **BiblioPC**): Eine Web-Anwendung auf einem zentralen Linux-Server. Sie prüft die Anmeldungen der Nutzer:innen und verwaltet deren individuelle Nutzungszeiten mithilfe einer integrierten Datenbank (SQLite). 
+Das Bibliotheks-PC Login-Management-System **BiblioPC**: Eine Web-Anwendung auf einem zentralen Linux-Server. Sie prüft die Anmeldungen der Nutzer:innen und verwaltet deren individuelle Nutzungszeiten mithilfe einer integrierten Datenbank (SQLite). 
 
-Der Rechner vor Ort (Ubuntu-**Client**) ist ein öffentlich zugänglicher Computer. Die Nutzer:innen melden sich dort einfach mit Ihrer Bibliotheksausweisnummer und Ihrem persönlichen Passwort an. Das System gleicht die Daten mit dem Hintergrundsystem ab und startet einen Zeit-Countdown für die Sitzung. Die Zeit läuft ab, bis man sich abmeldet oder die maximale Nutzungsdauer erreicht ist.
+Der **Client** vor Ort ist ein öffentlich zugänglicher Linux-Computer. Die Nutzer:innen melden sich dort einfach mit Ihrer Bibliotheksausweisnummer und Ihrem persönlichen Passwort an. Das System gleicht die Daten mit dem Hintergrundsystem ab und startet einen Zeitkontrolle für die Sitzung. Die Zeit läuft ab, bis man sich abmeldet oder die maximale Nutzungsdauer erreicht ist.
 
-## Das BiblioPC Backend
+## Bibliotheks-PC Login-Management-System (BiblioPC)
+
+Die Web-App dient zur Steuerung und Zeitkontrolle von Benutzersitzungen an öffentlich zugänglichen Bibliotheks-PCs. Es bietet eine HTTP-API-Schnittstellen für Client-Anwendungen auf PCs wie dem UNA und ein umfassendes webbasiertes Administrationsportal für das Bibliothekspersonal.
+
+BiblioPC regelt den Zugang zu Bibliotheks-PCs und übernimmt folgende Aufgaben:
+
+1. **Authentifizierung von Benutzern:**
+   - Abgleich von Benutzernummer und Passwort über externe Bibliothekssysteme (z. B. GBV / PAIA) oder eine lokale Datenbank.
+2. **Prüfung von Sperren & Berechtigungen:**
+   - Ermittlung des Sperrstatus von Bibliotheksausweisen sowie Abgleich mit administrativen Sperrlisten.
+3. **Zeitkontingent-Management:**
+   - Erfassung und Begrenzung der täglichen, wöchentlichen oder monatlichen Nutzungsdauer pro Benutzer (inklusive Support für Wildcard-Kontingente und individuelle Zeitboni).
+4. **Mehrfach-Login-Sperre:**
+   - Verhindert die gleichzeitige Anmeldung an mehreren Endgeräten.
+5. **Verwaltungsoberfläche für das Bibliothekspersonal:**
+   - Live-Übersicht aktiver Anmeldungen.
+   - Benutzerverwaltung (Anlegen temporärer lokaler Accounts, individuelle Kontingente, Sperren).
+   - Bearbeiterverwaltung (Rechte für Mitarbeiter/Admins, Passwortänderungen).
+   - Ausführliche Protokollierung und Tages-Statistiken für PC-Stationen und Benutzer.
+
+###Einfach starten mit Docker Compose
 
 Wenn auf dem Linux-Server Docker eingerichtet ist, kann einfach mit Docker-Compose und der Python Webapp **BiblioPC** gestartet werden:
 
