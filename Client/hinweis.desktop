@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=UNA Hinweis
+Exec=/usr/bin/python3 /usr/local/bin/hinweis.py
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Comment=Starte Hinweis für den UNA

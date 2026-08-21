@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=UNA Timer
+Exec=/usr/bin/python3 /usr/local/bin/timer.py
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+Comment=Starte den Timer für den UNA
