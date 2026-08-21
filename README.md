@@ -31,7 +31,7 @@ sudo docker compose up -d --build
 ```
 Sofern keine Änderungen an den Einstellungen vorgenommen haben, erreichen Sie die Website über die Adresse https://localhost oder Hostname bzw. IP-Adresse des Linux-Servers.
 
-Beim ersten Aufruf zeigt der Browser eine Sicherheitswarnung bezüglich des Zertifikats an. Das liegt daran, dass das Zertifikat vom System selbst ausgestellt ("selbstsigniert") wurde. Diese Warnung kann man bedenkenlos überspringen und die Seite trotzdem öffnen. Soll die Warnmeldung dauerhaft vermieden werden, kann im Ordner ```ssl``` ein eigenes, vertrauenswürdiges Zertifikat hinterlegt werden.
+Beim ersten Aufruf zeigt der Browser eine Sicherheitswarnung bezüglich des Zertifikats an. Das liegt daran, dass das Zertifikat vom System selbst ausgestellt ("selbstsigniert") wurde. Diese Warnung kann man bedenkenlos überspringen und die Seite trotzdem öffnen. Soll die Warnmeldung dauerhaft vermieden werden, kann im Ordner ```proxy``` ein Unterordner ```ssl``` angelegt und ein eigenes, vertrauenswürdiges Zertifikat hinterlegt werden.
 
 Die Zugangsdaten für das Admin-Konto sind in der Datei ```.env``` gespeichert. Die Daten können dort vor dem ersten Start beliebig geändert werden.
 
