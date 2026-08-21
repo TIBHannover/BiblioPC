@@ -1,5 +1,3 @@
-# Übersicht über die Web-App
-
 | Dateiname | Rolle / Kategorie | Hauptaufgabe |
 | :--- | :--- | :--- |
 | `auth_base.py` | Abstrakte Basisklasse | Schnittstellendefinition für alle Authentifizierungsmodule. |
