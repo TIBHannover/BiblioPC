@@ -1,0 +1,1 @@
+CSS-Dateien für die Templates für das Verwaltungssystem und die JavaScript-Bibliothek "Flatpickr", mit der man Kalender zur Auswahl von Datum und Uhrzeit (Date- und Timepicker) in Webseiten ohne externen Frameworks einbinden kann.
