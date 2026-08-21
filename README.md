@@ -336,3 +336,5 @@ Die Änderungen durch diese Dateien müssen zum Schluss mit ```dconf update``` �
 Wenn alle anderen Möglichkeiten ausgeschlossen sind, sich vom UNA abzumelden, übernimmt das ein Abmeldebutton aus dem Python-Skript ```timer.py```. Das Skript wird nach ```/usr/local/bin/timer.py``` kopiert. Damit ```timer.py``` automatisch gestartet wird, muss noch die Datei ```unatimer.desktop``` ins Master-Verzeichnis des Nutzers kopiert werden: ```/opt/una-master/.config/autostart/unatimer.desktop```. Meldet sich eine Nutzerin an, wird "una-master" zum Home-Verzeichnis "una-user" und fürt das Skript im Autostart aus.
 
 Falls noch weitere Skripte, Fenster etc. aus dem Autostart gestartet werden sollen, wie z.B. ```hinweis.py```, kann die Datei nach ```/usr/local/bin/hinweis.py``` kopiert werden und den Starter nach ```/opt/una-master/.config/autostart/hinweis.desktop```.
+
+Damit ist der Ubuntu-Client bereit und kann als öffentlicher Arbeitsplatz genutzt werden. Weitere Programme, Treiber für Scanner etc. können dann zusätzlich je nach Bedarf installiert werden. 
