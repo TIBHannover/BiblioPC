@@ -2,5 +2,5 @@ Die beiden Dateien "Dockerfile" und "requirements.txt" dienen dazu, eine Python-
 
 Das Basis-Image startet mit einem schlanken Python 3.11 Linux-Image (python:3.11-slim).
 
-Die Datei "requirements.txt" definiert die benötigten Bibliotheken (Python-Abhängigkeiten) und deren Mindestversionen.
+Die Datei `requirements.txt` definiert die benötigten Bibliotheken (Python-Abhängigkeiten) und deren Mindestversionen.
 
