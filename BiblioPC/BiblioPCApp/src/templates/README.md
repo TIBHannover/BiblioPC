@@ -1,6 +1,4 @@
-# BiblioPC Admin - Frontend Templates
-
-Jinja2- und HTML5-Templates für das Verwaltungssystem **BiblioPC**.
+Jinja2- und HTML5 Frontend-Templates für das Verwaltungssystem **BiblioPC**.
 
 | Datei | Beschreibung / Verwendungszweck |
 | :--- | :--- |
