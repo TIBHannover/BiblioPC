@@ -309,3 +309,30 @@ Damit der Benutzername "una-user" nicht im Sperrbildschirm steht, kann er mit ei
 usermod -c "Dieser PC ist aktuell gesperrt" una-user
 ```
 
+### Ubuntu absichern
+
+Die Anzahl der virtuellen Konsolen (TTYs) auf ein Minimum zu reduzieren, damit ein:e Benutzer:in nicht über Strg + Alt + F2 bis F12 auf ein paralleles Text-Terminal wechseln kann, um sich dort anzumelden oder Systembefehle auszuführen:
+
+```bash
+sed -i 's/#NAutoVTs=6/NAutoVTs=1/' /etc/systemd/logind.conf
+sed -i 's/#ReserveVT=6/ReserveVT=0/' /etc/systemd/logind.conf
+systemctl restart systemd-logind
+```
+Die folgenden 4 Dateien dienen dazu, ein Linux-System mit GNOME-Desktop wie Ubuntu in einen abgesicherten Kiosk-Modus zu versetzen. Sie schränken die Rechte der Benutzer:innen stark ein, sperren Tastenkombinationen und verhindern das Abmelden, Herunterfahren oder Benutzerwechsel:
+
+```bash
+/etc/polkit-1/rules.d/49-una-kiosk.rules
+/etc/dconf/profile/user
+/etc/dconf/db/local.d/00-kiosk
+/etc/dconf/db/local.d/locks/kiosk
+```
+
+Sollte es die Ordner noch nicht geben, müssen sie mit ```mkdir -p /etc/dconf/profile/``` vorher angelegt werden.
+
+Die Änderungen durch diese Dateien müssen zum Schluss mit ```dconf update``` übernommen werden.
+
+### Abmelden und Zeiterfassung
+
+Wenn alle anderen Möglichkeiten ausgeschlossen sind, sich vom UNA abzumelden, übernimmt das ein Abmeldebutton aus dem Python-Skript ```timer.py```. Das Skript wird nach ```/usr/local/bin/timer.py``` kopiert. Damit ```timer.py``` automatisch gestartet wird, muss noch die Datei ```unatimer.desktop``` ins Master-Verzeichnis des Nutzers kopiert werden: ```/opt/una-master/.config/autostart/unatimer.desktop```. Meldet sich eine Nutzerin an, wird "una-master" zum Home-Verzeichnis "una-user" und fürt das Skript im Autostart aus.
+
+Falls noch weitere Skripte, Fenster etc. aus dem Autostart gestartet werden sollen, wie z.B. ```hinweis.py```, kann die Datei nach ```/usr/local/bin/hinweis.py``` kopiert werden und den Starter nach ```/opt/una-master/.config/autostart/hinweis.desktop```.
