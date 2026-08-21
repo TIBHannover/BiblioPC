@@ -16,11 +16,11 @@ Wenn auf dem Linux-Server Docker eingerichtet ist, kann einfach mit Docker-Compo
 git clone https://github.com/TIBHannover/BiblioPC.git
 ```
 
-Anschließend die Datei mit den Umgebungsvariablen ```.env``` anpassen und einen eigenen Secret-Key eintragen wie z.B.
+Anschließend die Datei mit den Umgebungsvariablen ```.env.example``` unter ```BiblioPC``` in ```.env``` umbenennen und den Inhalt anpassen, z.B. einen eigenen Secret-Key eintragen:
 
 ```SECRET_KEY="7dcnc98z4bfaazrg723fnn732z4gdbnma"```
 
-Und eine IP-Adresse des DNS-Servers:
+Und die IP-Adresse des eigenen DNS-Servers:
 
 ```DNS_SERVER_1=127.0.0.1```
 
