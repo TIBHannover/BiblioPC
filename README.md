@@ -79,19 +79,19 @@ sudo docker compose logs -f
 
 ## Der Ubuntu-Client
 
-Als Client-System kann Ubuntu oder jede andere Linux-Distribution genutzt werden. Die aktuellen Skripte sind auf die Desktop-Oberfläche GNOME und deren Anmeldemaske (GNOME Display Manager / GDM) abgestimmt. Für den Testbetrieb kann ohne große Änderungen eine einfache Installation von Ubuntu (Version 24.04 oder 26.04) mit dem Standardbenutzer ```una-user``` genommen werden. Nach der Grundinstallation werden ein Fernzugriff und ein Administrator-Zugang benötigt. Für den Fernzugriff kann OpenSSH-Server installiert werden, um sich per SSH mit dem Client zu verbinden. Da ```una-user``` als einfacher Nutzer ohne Administrator-Rechte arbeitet, sollte der root-Account unter Ubuntu dauerhaft freigeschaltet werden (unter anderen Linux-Distributionen ist er meist schon vorhanden):
+Als Client-System kann Ubuntu oder jede andere Linux-Distribution genutzt werden. Die aktuellen Skripte sind auf die Desktop-Oberfläche GNOME und deren Anmeldemaske (GNOME Display Manager / GDM) abgestimmt. Für den Testbetrieb kann ohne große Änderungen eine einfache Installation von Ubuntu (Version 24.04 oder 26.04) mit dem Standardbenutzer `una-user` genommen werden. Nach der Grundinstallation werden ein Fernzugriff und ein Administrator-Zugang benötigt. Für den Fernzugriff kann OpenSSH-Server installiert werden, um sich per SSH mit dem Client zu verbinden. Da `una-user` als einfacher Nutzer ohne Administrator-Rechte arbeitet, sollte der root-Account unter Ubuntu dauerhaft freigeschaltet werden (unter anderen Linux-Distributionen ist er meist schon vorhanden):
 
 ```bash
 sudo passwd root
 ```
 
-Damit root sich auch per SSH an den Test-Client anmelden kann, wird in der Datei ``` /etc/ssh/sshd_config``` die Zeile ```PermitRootLogin``` auskommentiert und der Parameter auf ```yes``` gesetzt.
+Damit root sich auch per SSH an den Test-Client anmelden kann, wird in der Datei `/etc/ssh/sshd_config` die Zeile `PermitRootLogin` auskommentiert und der Parameter auf `yes` gesetzt.
 
 ### Installation des PAM-Moduls
 
-Der flexible Anmeldedienst PAM ist ein zentrales Framework unter Linux, das die Überprüfung von Identitäten und Zugriffsrechten von den eigentlichen Anwendungsprogrammen entkoppelt. Das Skript ```una_auth.py``` prüft das Passwort und weist die Ausweisnummer automatisch dem festen Systembenutzer ```una-user``` zu. Es lässt sich bei Bedarf problemlos an andere Login-Manager (wie LightDM) anpassen.
+Der flexible Anmeldedienst PAM ist ein zentrales Framework unter Linux, das die Überprüfung von Identitäten und Zugriffsrechten von den eigentlichen Anwendungsprogrammen entkoppelt. Das Skript `una_auth.py` prüft das Passwort und weist die Ausweisnummer automatisch dem festen Systembenutzer `una-user` zu. Es lässt sich bei Bedarf problemlos an andere Login-Manager (wie LightDM) anpassen.
 
-Als root werden ```una-user``` unter Ubuntu falls nötig die administrativen Rechte entzogen und zusätzliche Programme z.B. für die Authentifizierung über das PAM-Modul installiert:
+Als root werden `una-user` unter Ubuntu falls nötig die administrativen Rechte entzogen und zusätzliche Programme z.B. für die Authentifizierung über das PAM-Modul installiert:
 
 ```bash
 gpasswd -d una-user sudo
@@ -100,14 +100,14 @@ apt-get update && apt-get dist-upgrade
 apt-get install -y curl jq libpam-python python3-tk python3-requests
 ```
 
-Wenn das erledigt ist, wird das PAM-Modul nach ```/usr/local/lib/security/``` kopiert oder dort erstellt und die Berechtigungen gesetzt:
+Wenn das erledigt ist, wird das PAM-Modul nach `/usr/local/lib/security/` kopiert oder dort erstellt und die Berechtigungen gesetzt:
 
 ```bash
 chown root:root /usr/local/lib/security/una_auth.py
 chmod 644 /usr/local/lib/security/una_auth.py
 ```
 
-Die zentrale Konfigurationsdatei für das PAM-System ```common-session``` muss für das Python-Skript ```una_auth.py``` vorbereitet werden, indem die beiden Zeilen nach ```pam_unix.so``` ersetzt werden:
+Die zentrale Konfigurationsdatei für das PAM-System `common-session` muss für das Python-Skript `una_auth.py` vorbereitet werden, indem die beiden Zeilen nach `pam_unix.so` ersetzt werden:
 
 ```
 # and here are more per-package modules (the "Additional" block)
@@ -117,7 +117,7 @@ session required        pam_python.so /usr/local/lib/security/una_auth.py
 # end of pam-auth-update config
 ```
 
-Die JSON-Datei für die Konfiguration des PAM-Moduls wird unter ```/usr/local/etc/una-config.json``` erstellt. Die URL des Servers muss noch angepasst werden:
+Die JSON-Datei für die Konfiguration des PAM-Moduls wird unter `/usr/local/etc/una-config.json` erstellt. Die URL des Servers muss noch angepasst werden:
 
 ```
 {
