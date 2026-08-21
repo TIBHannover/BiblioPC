@@ -2,7 +2,7 @@
 
 | Dateiname | Rolle / Kategorie | Hauptaufgabe |
 | :--- | :--- | :--- |
-| `auth_base.py` | Abstract Base Class | Schnittstellendefinition für alle Authentifizierungsmodule. |
+| `auth_base.py` | Abstrakte Basisklasse | Schnittstellendefinition für alle Authentifizierungsmodule. |
 | `auth_gbv.py` | Authentifizierung | Anbindung an das externe GBV/PAIA-System zur Authentifizierung und Statusprüfung (mit Retry-Logik). |
 | `auth_local.py` | Authentifizierung | Lokales Fallback-/Test-Modul für Offline-Accounts. |
 | `config.py` | Konfiguration | Einlesen von Systemeinstellungen und Umgebungsvariablen (`.env`) via Pydantic. |
