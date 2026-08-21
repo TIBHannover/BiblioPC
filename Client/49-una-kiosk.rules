@@ -1,0 +1,10 @@
+polkit.addRule(function(action, subject) {
+    if (subject.user == "una-user") {
+        if (action.id.indexOf("org.freedesktop.login1.reboot") == 0 ||
+            action.id.indexOf("org.freedesktop.login1.power-off") == 0 ||
+            action.id.indexOf("org.freedesktop.login1.suspend") == 0 ||
+            action.id.indexOf("org.freedesktop.login1.hibernate") == 0) {
+            return polkit.Result.NO;
+        }
+    }
+});

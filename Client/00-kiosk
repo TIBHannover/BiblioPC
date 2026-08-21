@@ -1,0 +1,27 @@
+[org/gnome/desktop/lockdown]
+disable-log-out=true
+disable-user-switching=true
+disable-save-to-disk=false
+
+[org/gnome/settings-daemon/plugins/media-keys]
+logout=@as []
+
+[org/gnome/desktop/wm/keybindings]
+switch-to-workspace-down=@as []
+switch-to-workspace-up=@as []
+panel-main-menu=@as []
+panel-run-dialog=@as []
+
+[org/gnome/mutter/keybindings]
+switch-to-vt-1=@as []
+switch-to-vt-2=@as []
+switch-to-vt-3=@as []
+switch-to-vt-4=@as []
+switch-to-vt-5=@as []
+switch-to-vt-6=@as []
+switch-to-vt-7=@as []
+switch-to-vt-8=@as []
+switch-to-vt-9=@as []
+switch-to-vt-10=@as []
+switch-to-vt-11=@as []
+switch-to-vt-12=@as []
