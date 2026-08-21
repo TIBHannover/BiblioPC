@@ -2,6 +2,8 @@
 
 An den Standorten der Technischen Informationsbibliothek (TIB) steht unseren Nutzer:innen ein neuer Recherche-Arbeitsplatz zur Verfügung, der auf dem Betriebssystem Ubuntu Linux basiert. Damit können sie nicht nur im Internet und in den lizenzierten Angeboten der TIB recherchieren, sondern auch Texte verfassen, Dokumente scannen, eine automatische Texterkennung (OCR) nutzen und drucken. 
 
+![Screenshot vom UNA](UNA.png)
+
 Der Arbeitsplatz besteht aus zwei Hauptkomponenten: 
 
 Das Bibliotheks-PC Login-Management-System **BiblioPC**: Eine Web-Anwendung auf einem zentralen Linux-Server. Sie prüft die Anmeldungen der Nutzer:innen und verwaltet deren individuelle Nutzungszeiten mithilfe einer integrierten Datenbank (SQLite). 
