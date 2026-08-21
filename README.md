@@ -28,7 +28,7 @@ BiblioPC regelt den Zugang zu Bibliotheks-PCs und übernimmt folgende Aufgaben:
    - Bearbeiterverwaltung (Rechte für Mitarbeiter/Admins, Passwortänderungen).
    - Ausführliche Protokollierung und Tages-Statistiken für PC-Stationen und Benutzer.
 
-###Einfach starten mit Docker Compose
+### Einfach starten mit Docker Compose
 
 Wenn auf dem Linux-Server Docker eingerichtet ist, kann einfach mit Docker-Compose und der Python Webapp **BiblioPC** gestartet werden:
 
