@@ -4,7 +4,7 @@ An den Standorten der Technischen Informationsbibliothek (TIB) steht unseren Nut
 
 Der Arbeitsplatz besteht aus zwei Hauptkomponenten: 
 
-Das Hintergrundsystem (Backend **BiblioPC**): Eine Web-Anwendung auf einem zentralen Linux-Server. Sie prüft die Anmeldungen der Nutzer und verwaltet deren individuelle Nutzungszeiten mithilfe einer integrierten Datenbank (SQLite). 
+Das Hintergrundsystem (Backend **BiblioPC**): Eine Web-Anwendung auf einem zentralen Linux-Server. Sie prüft die Anmeldungen der Nutzer:innen und verwaltet deren individuelle Nutzungszeiten mithilfe einer integrierten Datenbank (SQLite). 
 
 Der Rechner vor Ort (Ubuntu-**Client**) ist ein öffentlich zugänglicher Computer. Die Nutzer:innen melden sich dort einfach mit Ihrer Bibliotheksausweisnummer und Ihrem persönlichen Passwort an. Das System gleicht die Daten mit dem Hintergrundsystem ab und startet einen Zeit-Countdown für die Sitzung. Die Zeit läuft ab, bis man sich abmeldet oder die maximale Nutzungsdauer erreicht ist.
 
