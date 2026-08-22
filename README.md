@@ -53,7 +53,7 @@ Um schnell zu prüfen, ob die Anmeldung über einen Client grundsätzlich funkti
 ```bash
 curl -k -X POST https://localhost/ilogin -d bn="99999999" -d pw="testpw123" -d host="lummerland" -d ip="127.0.0.1"
 curl -k -X POST https://localhost/iloginwh -d "bn=99999999"
-curl -k -X POST https://localhost/ilogout -d host="lummerland"" -d ip="127.0.0.1"
+curl -k -X POST https://localhost/ilogout -d host="lummerland" -d ip="127.0.0.1"
 ```
 
 Wenn die BiblioPC-App von einem anderen Rechner (Client) aus getestet werden soll, kann localhost in den Befehlen einfach durch die IP-Adresse oder den Hostnamen des Servers ersetzt werden.
