@@ -24,5 +24,6 @@ services:
       - .env
     volumes:
       - ./BiblioPCApp/src:/app
+      - ./BiblioPCApp/src/db:/app/db
     dns:
       - ${DNS_SERVER_1:-}
