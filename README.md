@@ -51,7 +51,7 @@ Die Zugangsdaten für das Admin-Konto sind in der Datei `.env` gespeichert und k
 Um schnell zu prüfen, ob die Anmeldung über einen Client grundsätzlich funktioniert, reicht ein einfacher Befehl mit *cURL*:
 
 ```bash
-curl -k -X POST https://localhost/ilogin -d bn="99999999" -d pw="testpw123" -d host="lummerland"" -d ip="127.0.0.1"
+curl -k -X POST https://localhost/ilogin -d bn="99999999" -d pw="testpw123" -d host="lummerland" -d ip="127.0.0.1"
 curl -k -X POST https://localhost/iloginwh -d "bn=99999999"
 curl -k -X POST https://localhost/ilogout -d host="lummerland"" -d ip="127.0.0.1"
 ```
