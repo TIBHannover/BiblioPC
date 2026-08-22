@@ -1,61 +1,753 @@
-set -x
+#!/bin/bash
+## Installationsskript für das PAM-Modul auf dem UNA
+
+## Bin ich root?
+[ "$EUID" -eq 0 ] || { echo "Fehler: Dieses Skript muss als Root ausgeführt werden."; exit 1; }
+
+set -x # Debugging-Modus
 export DEBIAN_FRONTEND=noninteractive
-apt-get update
-# The following packages are required for the PAM module and the greeter configuration
-apt-get install -y libpam-python python3-tk python3-requests dos2unix
-# Unzip the una-master.zip file to /opt and set the correct permissions for the una-user home directory
-unzip -o "$installerSourceDir$/una-master.zip" -d /opt
-rm -rf /home/una-user
-mkdir /home/una-user
-chown una-user:una-user /home/una-user
-chmod 755 /home/una-user
-rm -rf /opt/una-master/*Overlay*
+
+## Damit die Anmeldung funktioniert muss das Verzeichnis /opt/una-master mit
+## der unveränderliche Master-Vorlage des Home-Verzeichnisses /home/una-user
+## angelegt sein!
+
+[ -d /opt/una-master ] || { echo "Fehler: Verzeichnis /opt/una-master fehlt!"; exit 1;}
+
+## Berechtigungen für una-user entziehen 
+
+gpasswd -d una-user sudo
+gpasswd -d una-user adm
+
+apt-get update && apt-get -y dist-upgrade
+apt-get install -y curl jq libpam-python python3-tk python3-requests
+
+## Anmeldebildschirm konfigurieren
+
+cat << 'EOF' > /etc/gdm3/greeter.dconf-defaults
+# These are the options for the greeter session that can be set 
+# through GSettings. Any GSettings setting that is used by the 
+# greeter session can be set here.
+
+# Note that you must configure the path used by dconf to store the 
+# configuration, not the GSettings path.
+
+# Theming options
+# ===============
+#  - Change the GTK+ theme
+[org/gnome/desktop/interface]
+# gtk-theme='Adwaita'
+#  - Use another background
+[org/gnome/desktop/background]
+#picture-uri='file:///usr/share/backgrounds/TIB.jpg'
+#picture-options='zoom'
+#  - Or no background at all
+[org/gnome/desktop/background]
+# picture-options='none'
+# primary-color='#000000'
+
+# Login manager options
+# =====================
+[org/gnome/login-screen]
+#logo='/usr/share/icons/TIB_Logo.png'
+
+# - Disable user list
+disable-user-list=true
+# - Disable restart buttons
+disable-restart-buttons=true
+# - Show a login welcome message
+banner-message-enable=true
+banner-message-text='𝗪𝗶𝗹𝗹𝗸𝗼𝗺𝗺𝗲𝗻 𝗮𝗺 𝗣𝗖-𝗔𝗿𝗯𝗲𝗶𝘁𝘀𝗽𝗹𝗮𝘁𝘇\n\nBitte melden Sie sich mit Bibliotheksausweisnummer und Passwort an.\n\nSollte bei der Anmeldung ein Fehler auftreten, drücken Sie die Esc-Taste und probieren es erneut.\n\n𝗪𝗲𝗹𝗰𝗼𝗺𝗲 𝘁𝗼 𝘁𝗵𝗲 𝗽𝘂𝗯𝗹𝗶𝗰 𝗣𝗖\n\nPlease log in using your library card number and password.\n\nIf an error occurs during login, press Esc key and try again.'
+
+# Automatic suspend
+# =================
+[org/gnome/settings-daemon/plugins/power]
+# - Time inactive in seconds before suspending with AC power
+#   1200=20 minutes, 0=never
+# sleep-inactive-ac-timeout=1200
+# - What to do after sleep-inactive-ac-timeout
+#   'blank', 'suspend', 'shutdown', 'hibernate', 'interactive' or 'nothing'
+# sleep-inactive-ac-type='suspend'
+# - As above but when on battery
+# sleep-inactive-battery-timeout=1200
+# sleep-inactive-battery-type='suspend'
+EOF
+
+## Installation des PAM-Moduls
+
+mkdir -p /usr/local/lib/security/
+cat << 'EOF' >  /usr/local/lib/security/una_auth.py
+import sys
+import requests
+import syslog
+import os
+import json
+import subprocess
+import urllib3
+import socket
+from urllib.parse import urlparse
+
+CONFIG_PATH = "/usr/local/etc/una-config.json"
+
+def get_api_url():
+    """Lädt die Konfiguration und baut die API-URL zusammen."""
+    if not os.path.exists(CONFIG_PATH):
+        syslog.syslog(syslog.LOG_ERR, f"UNA-AUTH: {CONFIG_PATH} fehlt!")
+        sys.exit(1)
+
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            config = json.load(f)
+            server = config.get("server_url")
+            script = config.get("login_script")
+
+            if not server or not script:
+                syslog.syslog(syslog.LOG_ERR, "UNA-AUTH: Konfigurationsfelder fehlen!")
+                sys.exit(1)
+
+            return f"{server.rstrip('/')}/{script.lstrip('/')}"
+    except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"UNA-AUTH: Fehler beim Laden der Config: {e}")
+        sys.exit(1)
+
+def log(msg):
+    syslog.syslog(syslog.LOG_INFO, f"UNA-AUTH: {msg}")
+
+def show_error(pamh, text):
+    """Sendet eine Fehlermeldung an das GDM3 Interface."""
+    try:
+        msg = pamh.Message(pamh.PAM_ERROR_MSG, text)
+        pamh.conversation(msg)
+    except Exception:
+        pass
+
+def pam_sm_authenticate(pamh, flags, argv):
+    user = None
+    # 1. Versuche den User zu holen (GDM Context)
+    try:
+        user = pamh.get_user(None)
+    except Exception:
+        pass
+
+    # 2. Login/Lockscreen Logik
+    if user is None or user == "una-user":
+        try:
+            resp = pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_ON, "Bibliotheksausweisnummer: "))
+            user = resp.resp
+        except Exception:
+            return pamh.PAM_CONV_ERR
+
+    if not user:
+        return pamh.PAM_USER_UNKNOWN
+
+    # 3. Passwort abfragen
+    try:
+        resp = pamh.conversation(pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Passwort: "))
+        password = resp.resp
+    except Exception:
+        return pamh.PAM_CONV_ERR
+
+    # 4. API Abfrage
+    api_url = get_api_url()
+
+    try:
+        hostname = socket.gethostname()
+    except Exception:
+        hostname = "unknown"
+
+    try:
+        parsed_url = urlparse(api_url)
+        api_host = parsed_url.hostname
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((api_host, 80))
+        client_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        client_ip = "127.0.0.1"
+
+    payload = {
+        "bn": user,
+        "pw": password,
+        "host": hostname,
+        "ip": client_ip
+    }
+    
+    # Fehler-Mapping definieren
+    errors = {
+        "lberr": "Benutzernummer oder Passwort falsch.",
+        "sper": "Ihr Account ist gesperrt. Bitte wenden Sie sich an die Information.",
+        "lbsp": "Problem mit dem Bibliothekskonto (LBS).",
+        "ende": "Ihre tägliche Nutzungszeit ist abgelaufen.",
+        "aktv": "Sie sind bereits an einem anderen PC angemeldet.",
+        "err":  "Datenbankfehler. Bitte versuchen Sie es später erneut."
+    }
+
+    try:
+        # Timeout auf 5 Sekunden setzen, damit GDM nicht einfriert
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        r = requests.post(api_url, data=payload, timeout=5, verify=False)
+        response_text = r.text.strip()
+
+        # FALL: ERFOLG
+        if r.status_code == 200 and ":" in response_text:
+            
+            # Check ob Session bereits von jemand anderem belegt (Lockscreen-Schutz)
+            if os.path.exists("/dev/shm/benutzernummer"):
+                with open("/dev/shm/benutzernummer", "r") as f:
+                    current_session_user = f.read().strip()
+                
+                if user != current_session_user:
+                    log(f"LOCKSCREEN: Abgelehnt. {user} wollte Session von {current_session_user} öffnen.")
+                    show_error(pamh, "Dieser PC ist durch einen anderen Benutzer belegt.")
+                    return pamh.PAM_AUTH_ERR
+
+            log(f"Login erfolgreich für {user}. Mapping auf una-user.")
+            
+            # WICHTIG: User auf lokalen Account umbiegen
+            pamh.user = "una-user"
+            
+            # Session-Daten hinterlegen
+            for filename, value in [("benutzernummer", user), ("hostname", hostname), ("ip", client_ip)]:
+                filepath = f"/dev/shm/{filename}"
+                with open(filepath, "w") as f:
+                    f.write(value)
+                os.chmod(filepath, 0o644)
+            
+            return pamh.PAM_SUCCESS
+
+        # FALL: API ANTWORTET MIT FEHLERCODE (z.B. nopw)
+        error_msg = errors.get(response_text, f"Anmeldefehler (Code: {response_text})")
+        show_error(pamh, error_msg)
+        log(f"Login abgelehnt für {user}: {response_text}")
+        return pamh.PAM_AUTH_ERR
+
+    except requests.exceptions.RequestException as e:
+        # Dies fängt Timeouts, Verbindungsabbrüche und DNS-Fehler ab
+        show_error(pamh, "Server nicht erreichbar.")
+        log(f"Netzwerkfehler: {str(e)}")
+        return pamh.PAM_SERVICE_ERR
+    except Exception as e:
+        # Alles andere (Skriptfehler)
+        show_error(pamh, "Interner Systemfehler.")
+        log(f"Allgemeiner Fehler im PAM-Skript: {str(e)}")
+        return pamh.PAM_SERVICE_ERR
+
+def pam_sm_setcred(pamh, flags, argv):
+    return pamh.PAM_SUCCESS
+
+def pam_sm_acct_mgmt(pamh, flags, argv):
+    return pamh.PAM_SUCCESS
+
+def pam_sm_open_session(pamh, flags, argv):
+    # Wir mounten nur, wenn der Zielbenutzer una-user ist
+    if pamh.user == "una-user":
+        try:
+            # 1. RAM-Verzeichnisse erstellen
+            os.makedirs("/dev/shm/una-upper", mode=0o755, exist_ok=True)
+            os.makedirs("/dev/shm/una-work", mode=0o755, exist_ok=True)
+            
+            # 2. Mount-Befehl ausführen (voller Pfad zu /usr/bin/mount ist sicherer)
+            # Wichtig: Wir nutzen die exakt funktionierenden Pfade aus deinem Test
+            cmd = [
+                "/usr/bin/mount", "-t", "overlay", "overlay",
+                "-o", "lowerdir=/opt/una-master,upperdir=/dev/shm/una-upper,workdir=/dev/shm/una-work",
+                "/home/una-user"
+            ]
+            subprocess.run(cmd, check=True)
+            
+            # 3. Besitzrechte im Mount korrigieren, damit una-user schreiben darf
+            subprocess.run(["/usr/bin/chown", "-R", "una-user:una-user", "/home/una-user"], check=True)
+            
+            syslog.syslog(syslog.LOG_INFO, "UNA-AUTH: OverlayFS erfolgreich bereitgestellt.")
+        except Exception as e:
+            syslog.syslog(syslog.LOG_ERR, f"UNA-AUTH: Mount-Fehler: {str(e)}")
+            return pamh.PAM_SESSION_ERR
+    return pamh.PAM_SUCCESS
+
+def pam_sm_close_session(pamh, flags, argv):
+    if pamh.user == "una-user":
+        # Lazy unmount (-l) ist wichtig, falls noch Prozesse auf Dateien zugreifen
+        subprocess.run(["/usr/bin/umount", "-l", "/home/una-user"])
+        # RAM-Inhalte löschen
+        subprocess.run(["/usr/bin/rm", "-rf", "/dev/shm/una-upper", "/dev/shm/una-work"])
+        syslog.syslog(syslog.LOG_INFO, "UNA-AUTH: OverlayFS entfernt und RAM bereinigt.")
+    return pamh.PAM_SUCCESS      
+EOF
+
+chown root:root /usr/local/lib/security/una_auth.py
+chmod 644 /usr/local/lib/security/una_auth.py
+
+cat << 'EOF' > /etc/pam.d/common-session
+#
+# /etc/pam.d/common-session - session-related modules common to all services
+#
+# This file is included from other service-specific PAM config files,
+# and should contain a list of modules that define tasks to be performed
+# at the start and end of interactive sessions.
+#
+# As of pam 1.0.1-6, this file is managed by pam-auth-update by default.
+# To take advantage of this, it is recommended that you configure any
+# local modules either before or after the default block, and use
+# pam-auth-update to manage selection of other modules.  See
+# pam-auth-update(8) for details.
+
+# here are the per-package modules (the "Primary" block)
+session [default=1]                     pam_permit.so
+# here's the fallback if no module succeeds
+session requisite                       pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+session required                        pam_permit.so
+# The pam_umask module will set the umask according to the system default in
+# /etc/login.defs and user settings, solving the problem of different
+# umask settings with different shells, display managers, remote sessions etc.
+# See "man pam_umask".
+session optional                        pam_umask.so
+# and here are more per-package modules (the "Additional" block)
+session required        pam_unix.so
+session optional        pam_systemd.so
+session required        pam_python.so /usr/local/lib/security/una_auth.py
+# end of pam-auth-update config
+EOF
+
+cat << 'EOF' > /usr/local/etc/una-config.json
+{
+    "server_url": "https://10.0.3.2",
+    "login_script": "ilogin",
+    "logout_script": "ilogout",
+    "status_script": "iloginwh"
+}
+EOF
+
+cat << 'EOF' > /etc/pam.d/gdm-password
+#%PAM-1.0
+
+# 1. Python-Modul mit User-Mapping
+# Wenn das Skript PAM_SUCCESS liefert, bricht 'success=done' die weitere 
+# Authentifizierung ab und GDM loggt den (im Skript umgebogenen) 'una-user' ein.
+auth [success=done default=ignore] pam_python.so /usr/local/lib/security/una_auth.py
+
+# 2. Standard GDM Authentifizierung
+# Falls dein Skript 'ignore' liefert (z. B. wenn die API nicht erreichbar ist 
+# oder die Eingabe leer war), greift der normale Login-Prozess.
+@include common-auth
+
+# 3. Account-Prüfung
+# Hier wird gecheckt, ob der Account (una-user) überhaupt existiert und aktiv ist.
+@include common-account
+
+# 4. GDM-spezifische Erweiterungen
+# Dies sorgt u.a. dafür, dass der GNOME-Keyring angestoßen wird.
+auth      requisite     pam_nologin.so
+auth      optional      pam_gnome_keyring.so
+
+# 5. Session- und Environment-Variablen
+# Lädt Sprach- und Systemlimits (wichtig für die Desktop-Umgebung).
+session   required      pam_env.so readenv=1
+session   required      pam_env.so readenv=1 envfile=/etc/default/locale
+session   required      pam_limits.so
+@include common-session
+
+# 6. Passwort-Änderungen (Standard)
+@include common-password
+EOF
+
+cat << 'EOF' > /etc/pam.d/gnome-screensaver
+#%PAM-1.0
+
+# 1. Das Python-Modul prüft die Identität gegen /dev/shm/benutzernummer und die API
+auth [success=done default=ignore] pam_python.so /usr/local/lib/security/una_auth.py
+
+# 2. Falls das Skript 'ignore' liefert, greift die Standard-Authentifizierung
+# (Wichtig, falls Admins sich lokal mit Passwort am Lockscreen legitimieren müssen)
+@include common-auth
+
+# 3. Standard Account-Prüfung
+@include common-account
+
+# 4. Session-Management für den Lockscreen
+# Erlaubt dem System, den Keyring beim Entsperren wieder zu öffnen
+auth      optional      pam_gnome_keyring.so
+@include common-session
+EOF
+
+cat << 'EOF' > /usr/local/bin/una-reset.sh
+#!/bin/bash
+# URL aus der una-config.json ermitteln
+CONFIG_FILE="/usr/local/etc/una-config.json"
+SERVER_URL=$(jq -r '.server_url' "$CONFIG_FILE")
+LOGOUT_SCRIPT=$(jq -r '.logout_script' "$CONFIG_FILE")
+LOGOUT_URL="${SERVER_URL}/${LOGOUT_SCRIPT}"
+
+CLIENT_HOST="unknown"
+CLIENT_IP="127.0.0.1"
+
+if [ -f "/dev/shm/hostname" ]; then
+    CLIENT_HOST=$(cat /dev/shm/hostname)
+fi
+
+if [ -f "/dev/shm/ip" ]; then
+    CLIENT_IP=$(cat /dev/shm/ip)
+fi
+
+# Benutzer abmelden
+curl -k -s -X POST "$LOGOUT_URL" -d "host=${CLIENT_HOST}" -d "ip=${CLIENT_IP}"
+
+# Benutzernummer löschen
+rm -rf /dev/shm/benutzernummer
+rm -rf /dev/shm/hostname
+rm -rf /dev/shm/ip
+
+# Home una-user löschen
+rm -rf /home/una-user && mkdir /home/una-user
+EOF
+chmod +x /usr/local/bin/una-reset.sh
+
+cat << 'EOF' > /etc/gdm3/PostSession/Default
+#!/bin/sh
+/usr/local/bin/una-reset.sh
+exit 0
+EOF
+
+cat << 'EOF' > /usr/local/bin/timer.py
+#!/usr/bin/env python3
+import tkinter as tk
+from tkinter import font
+import requests
+import subprocess
+import os
+import json
+import sys
+import urllib3
+
+# Konfiguration
+CONFIG_PATH = "/usr/local/etc/una-config.json"
+BN_FILE = "/dev/shm/benutzernummer"
+COLOR_BG = "#121212"        # Tiefes Anthrazit
+COLOR_ACCENT = "#3498db"    # Modernes Blau
+COLOR_TEXT = "#E0E0E0"      # Off-White
+COLOR_LOGOUT = "#e74c3c"    # Sanftes Rot
+
+def get_api_url():
+    if not os.path.exists(CONFIG_PATH): return None
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            config = json.load(f)
+            return f"{config['server_url'].rstrip('/')}/{config['status_script'].lstrip('/')}"
+    except: return None
+
+API_URL = get_api_url()
+
+class ModernTimer:
+    def __init__(self):
+        self.root = tk.Tk()
+                
+        # --- Stealth Mode & Dock-Schutz ---
+        self.root.withdraw() # Fenster kurz verstecken für Berechnungen
+        self.root.attributes('-type', 'utility')
+        self.root.attributes('-topmost', True)
+        self.root.overrideredirect(True) # Rahmenlos für den Clean-Look
+        # Verhindert das Schließen des Fensters durch Alt+F4
+        self.root.protocol("WM_DELETE_WINDOW", lambda: None)
+        
+        self.bn = "000000"
+        if os.path.exists(BN_FILE):
+            try:
+                with open(BN_FILE, "r") as f: self.bn = f.read().strip()
+            except: pass
+
+        # Styles
+        self.root.configure(bg=COLOR_BG)
+        self.f_small = font.Font(family="Ubuntu", size=9)
+        self.f_big = font.Font(family="Ubuntu", size=14, weight="bold")
+        self.f_btn = font.Font(family="Ubuntu", size=10, weight="bold")
+
+        # Container mit dünnem Border-Effekt
+        self.outer_frame = tk.Frame(self.root, bg=COLOR_ACCENT, padx=1, pady=1)
+        self.outer_frame.pack()
+        
+        self.inner_frame = tk.Frame(self.outer_frame, bg=COLOR_BG, padx=20, pady=15)
+        self.inner_frame.pack()
+
+        # UI Elemente
+        tk.Label(self.inner_frame, text=f"{self.bn}", bg=COLOR_BG, 
+                 fg=COLOR_ACCENT, font=self.f_small).pack(anchor="w")
+        
+        self.lbl_time = tk.Label(self.inner_frame, text="--:--", bg=COLOR_BG, 
+                                 fg=COLOR_TEXT, font=self.f_big)
+        self.lbl_time.pack(pady=(5, 10), anchor="w")
+
+        # Stylischer Button
+        self.btn_logout = tk.Button(
+            self.inner_frame, text="⏻  LOGOUT", bg=COLOR_LOGOUT, fg="white",
+            activebackground="#c0392b", activeforeground="white",
+            relief="flat", font=self.f_btn, bd=0, cursor="hand2",
+            padx=20, pady=5, command=self.force_logout
+        )
+        self.btn_logout.pack(fill="x")
+
+        # Drag-Support
+        for w in [self.inner_frame, self.lbl_time]:
+            w.bind("<Button-1>", self.start_move)
+            w.bind("<B1-Motion>", self.do_move)
+
+        self.root.after(100, self.position_top_right)
+        self.update_time()
+        self.root.deiconify() # Fenster jetzt erst anzeigen
+        self.root.mainloop()
+
+    def position_top_right(self):
+        self.root.update_idletasks()
+        w, h = self.root.winfo_width(), self.root.winfo_height()
+        # 30px Abstand vom Rand
+        x = self.root.winfo_screenwidth() - w - 30
+        y = 50
+        self.root.geometry(f"{w}x{h}+{x}+{y}")
+
+    def update_time(self):
+        if not API_URL:
+            self.lbl_time.config(text="CONFIG ERROR", fg=COLOR_LOGOUT)
+            return
+        try:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            hostname = "unknown"
+            client_ip = "127.0.0.1"
+
+            if os.path.exists("/dev/shm/hostname"):
+                with open("/dev/shm/hostname", "r") as f: hostname = f.read().strip()
+            if os.path.exists("/dev/shm/ip"):
+                with open("/dev/shm/ip", "r") as f: client_ip = f.read().strip()
+
+            payload = {'bn': self.bn, 'host': hostname, 'ip': client_ip}
+              
+            r = requests.post(API_URL, data=payload, timeout=3, verify=False)
+            res = r.text.strip()
+            if res in ["ende", "sper", "0:00", "00:00"]: self.force_logout()
+            else: self.lbl_time.config(text=f"{res} (hh:mm)")
+
+        except:
+            self.lbl_time.config(text="OFFLINE", fg=COLOR_LOGOUT)
+        self.root.after(60000, self.update_time)
+
+    def force_logout(self):
+        # Beendet die grafische Sitzung des aktuellen Nutzers direkt über systemd
+        os.system("systemctl --user exit")
+
+    def start_move(self, e):
+        self.offset_x, self.offset_y = e.x, e.y
+
+    def do_move(self, e):
+        x = self.root.winfo_x() + (e.x - self.offset_x)
+        y = self.root.winfo_y() + (e.y - self.offset_y)
+        self.root.geometry(f"+{x}+{y}")
+
+if __name__ == "__main__":
+    ModernTimer()
+EOF
+chmod +x /usr/local/bin/timer.py
+
+cat << 'EOF' > /usr/local/bin/hinweis.py
+#!/usr/bin/env python3
+import tkinter as tk
+from tkinter import font
+import socket
+
+# --- DESIGN FARBEN ---
+COLOR_BG = "#121212"
+COLOR_ACCENT = "#3498db"
+COLOR_TEXT = "#E0E0E0"
+COLOR_LOGOUT = "#e74c3c" # Das Orange/Rot deines Buttons
+
+class UnaHinweis:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Wichtiger Hinweis")
+        self.root.overrideredirect(True)
+        self.root.attributes('-topmost', True)
+        self.root.configure(bg=COLOR_BG)
+
+        self.f_title = font.Font(family="Ubuntu", size=12, weight="bold")
+        self.f_body = font.Font(family="Ubuntu", size=10)
+        self.f_btn = font.Font(family="Ubuntu", size=10, weight="bold")
+
+        outer = tk.Frame(self.root, bg=COLOR_ACCENT, padx=1, pady=1)
+        outer.pack()
+        
+        inner = tk.Frame(outer, bg=COLOR_BG, padx=25, pady=25)
+        inner.pack()
+
+        # Titel
+        tk.Label(inner, text="Willkommen! / Welcome!", 
+                 bg=COLOR_BG, fg=COLOR_ACCENT, font=self.f_title).pack(anchor="w")
+
+        # Das Text-Widget als Container für gemischte Farben
+        text_area = tk.Text(inner, bg=COLOR_BG, fg=COLOR_TEXT, font=self.f_body,
+                            relief="flat", highlightthickness=0, height=8, width=55, spacing2=10)
+        text_area.pack(anchor="w", pady=15)
+
+        # Hier definieren wir den "Button-Look" für den Text
+        # background: Die orange/rote Farbe vom OK-Button
+        # foreground: Weiß (bleibt weiß)
+        text_area.tag_configure("logout_style", 
+                                background=COLOR_LOGOUT, 
+                                foreground="white", 
+                                font=self.f_btn)
+
+        # Text zusammensetzen
+        line1 = "Am Ende der Recherche/Arbeit abmelden mit "
+        line2 = "\nBeim Abmelden werden alle lokalen Dateien gelöscht.\nSichern Sie Ihre Daten rechtzeitig!\n\n"
+        line3 = "Log out at the end of your research/work session with "
+        line4 = "\nNote that all local files will be deleted when you log out.\nMake sure to back up your data in time!"
+
+        # Einfügen mit dem Tag für die [ LOGOUT ] Stellen
+        text_area.insert("end", line1)
+        text_area.insert("end", " ⏻ LOGOUT ", "logout_style") 
+        text_area.insert("end", line2)
+        text_area.insert("end", line3)
+        text_area.insert("end", " ⏻ LOGOUT ", "logout_style")
+        text_area.insert("end", line4)
+
+        # Interaktion verhindern
+        text_area.config(state="disabled")
+
+        # OK Button
+        btn = tk.Button(inner, text="OK", bg=COLOR_LOGOUT, fg="white",
+                        relief="flat", font=self.f_btn, bd=0,
+                        padx=30, pady=8, command=self.root.destroy)
+        btn.pack(anchor="w")
+
+        self.root.update_idletasks()
+        w, h = self.root.winfo_width(), self.root.winfo_height()
+        x = (self.root.winfo_screenwidth() // 2) - (w // 2)
+        y = (self.root.winfo_screenheight() // 2) - (h // 2)
+        self.root.geometry(f"+{x}+{y}")
+        
+        self.root.mainloop()
+
+if __name__ == "__main__":
+    UnaHinweis()
+EOF
+chmod +x /usr/local/bin/hinweis.py
+
+mkdir -p /opt/una-master/.config/autostart
+
+cat << 'EOF' > /opt/una-master/.config/autostart/unatimer.desktop
+[Desktop Entry]
+Type=Application
+Name=UNA Timer
+Exec=/usr/bin/python3 /usr/local/bin/timer.py
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+Comment=Starte den Timer für den UNA
+EOF
+chmod +x /opt/una-master/.config/autostart/unatimer.desktop
+
+cat << 'EOF' > /opt/una-master/.config/autostart/hinweis.desktop
+[Desktop Entry]
+Type=Application
+Name=UNA Hinweis
+Exec=/usr/bin/python3 /usr/local/bin/hinweis.py
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Comment=Starte Hinweis für den UNA
+EOF
+chmod +x /opt/una-master/.config/autostart/hinweis.desktop
+
+## "Benutzername" durch "Bibliotheksausweisnummer" ersetzen
+
+apt-get install -y gettext language-pack-de language-pack-en language-pack-gnome-de language-pack-gnome-en
+msgunfmt /usr/share/locale-langpack/de/LC_MESSAGES/gdm.mo -o /tmp/gdm_de.po
+sed -i 's/Benutzername/Bibliotheksausweisnummer/g' /tmp/gdm_de.po
+msgfmt /tmp/gdm_de.po -o /tmp/gdm.mo
+cp /usr/share/locale-langpack/de/LC_MESSAGES/gdm.mo{,.bak}
+cp /tmp/gdm.mo /usr/share/locale-langpack/de/LC_MESSAGES/gdm.mo
+msgunfmt /usr/share/locale-langpack/de/LC_MESSAGES/gnome-shell.mo -o /tmp/gnome-shell_de.po
+sed -i 's/Benutzername/Bibliotheksausweisnummer/g' /tmp/gnome-shell_de.po 
+msgfmt /tmp/gnome-shell_de.po -o /tmp/gnome-shell.mo 
+cp /usr/share/locale-langpack/de/LC_MESSAGES/gnome-shell.mo{,.bak}
+cp /tmp/gnome-shell.mo /usr/share/locale-langpack/de/LC_MESSAGES/gnome-shell.mo
+
+systemctl restart gdm
+
+## Ubuntu absichern
+
 # Modify the logind.conf file to set NAutoVTs to 1 and ReserveVT to 0
 sed -i 's/#NAutoVTs=6/NAutoVTs=1/' /etc/systemd/logind.conf
 sed -i 's/#ReserveVT=6/ReserveVT=0/' /etc/systemd/logind.conf
-# Copy the necessary files to their respective locations
-cp "$installerSourceDir$/greeter.dconf-defaults" /etc/gdm3/greeter.dconf-defaults
-cp "$installerSourceDir$/TIB.jpg" /usr/share/backgrounds/TIB.jpg
-cp "$installerSourceDir$/TIB_Logo.png" /usr/share/icons/TIB_Logo.png
-cp "$installerSourceDir$/TIB_Logo.png" /opt/una-master/.face
-mkdir -p /usr/local/lib/security/
-cp "$installerSourceDir$/una_auth.py" /usr/local/lib/security/una_auth.py
-chown root:root /usr/local/lib/security/una_auth.py
-chmod 644 /usr/local/lib/security/una_auth.py
-cp "$installerSourceDir$/common-session" /etc/pam.d/common-session
-dos2unix /etc/pam.d/common-session
-cp "$installerSourceDir$/una-config.json" /usr/local/etc/una-config.json
-cp "$installerSourceDir$/gdm-password" /etc/pam.d/gdm-password
-dos2unix /etc/pam.d/gdm-password
-cp "$installerSourceDir$/gnome-screensaver" /etc/pam.d/gnome-screensaver
-dos2unix /etc/pam.d/gnome-screensaver 
-cp "$installerSourceDir$/una-reset.sh" /usr/local/bin/una-reset.sh
-dos2unix /usr/local/bin/una-reset.sh
-chmod +x /usr/local/bin/una-reset.sh
-cp "$installerSourceDir$/Default" /etc/gdm3/PostSession/Default
-dos2unix /etc/gdm3/PostSession/Default
-cp "$installerSourceDir$/timer.py" /usr/local/bin/timer.py
-chmod +x /usr/local/bin/timer.py
-cp "$installerSourceDir$/hinweis.py" /usr/local/bin/hinweis.py
-chmod +x /usr/local/bin/hinweis.py
-cp "$installerSourceDir$/auto-logout-screensaver.sh" /usr/local/bin/auto-logout-screensaver.sh
-chmod +x /usr/local/bin/auto-logout-screensaver.sh
-cp "$installerSourceDir$/auto-logout.desktop" /etc/xdg/autostart/auto-logout.desktop
-chmod +x /etc/xdg/autostart/auto-logout.desktop
+
 mkdir -p /etc/polkit-1/rules.d
-cp "$installerSourceDir$/49-una-kiosk.rules" /etc/polkit-1/rules.d/49-una-kiosk.rules
-dos2unix /etc/polkit-1/rules.d/49-una-kiosk.rules
+cat << 'EOF' > /etc/polkit-1/rules.d/49-una-kiosk.rules
+polkit.addRule(function(action, subject) {
+    if (subject.user == "una-user") {
+        if (action.id.indexOf("org.freedesktop.login1.reboot") == 0 ||
+            action.id.indexOf("org.freedesktop.login1.power-off") == 0 ||
+            action.id.indexOf("org.freedesktop.login1.suspend") == 0 ||
+            action.id.indexOf("org.freedesktop.login1.hibernate") == 0) {
+            return polkit.Result.NO;
+        }
+    }
+});
+EOF
+
 mkdir -p /etc/dconf/profile/
-cp "$installerSourceDir$/user" /etc/dconf/profile/user
-dos2unix /etc/dconf/profile/user
+cat << 'EOF' > /etc/dconf/profile/user
+user-db:user
+system-db:local
+EOF
+
 mkdir -p /etc/dconf/db/local.d
-cp "$installerSourceDir$/00-kiosk" /etc/dconf/db/local.d/00-kiosk
-dos2unix /etc/dconf/db/local.d/00-kiosk
+cat << 'EOF' > /etc/dconf/db/local.d/00-kiosk
+[org/gnome/desktop/lockdown]
+disable-log-out=true
+disable-user-switching=true
+disable-save-to-disk=false
+
+[org/gnome/settings-daemon/plugins/media-keys]
+logout=@as []
+
+[org/gnome/desktop/wm/keybindings]
+switch-to-workspace-down=@as []
+switch-to-workspace-up=@as []
+panel-main-menu=@as []
+panel-run-dialog=@as []
+
+[org/gnome/mutter/keybindings]
+switch-to-vt-1=@as []
+switch-to-vt-2=@as []
+switch-to-vt-3=@as []
+switch-to-vt-4=@as []
+switch-to-vt-5=@as []
+switch-to-vt-6=@as []
+switch-to-vt-7=@as []
+switch-to-vt-8=@as []
+switch-to-vt-9=@as []
+switch-to-vt-10=@as []
+switch-to-vt-11=@as []
+switch-to-vt-12=@as []
+EOF
+
 mkdir -p /etc/dconf/db/local.d/locks/
-cp "$installerSourceDir$/kiosk" /etc/dconf/db/local.d/locks/kiosk
-dos2unix /etc/dconf/db/local.d/locks/kiosk
-# Update dconf to apply the changes
+cat << 'EOF' > /etc/dconf/db/local.d/locks/kiosk
+/org/gnome/desktop/lockdown/disable-log-out
+/org/gnome/desktop/lockdown/disable-user-switching
+/org/gnome/settings-daemon/plugins/media-keys/logout
+EOF
+
 dconf update
+
+## Ausführungsrechte entziehen
+chmod o-x /usr/bin/software-properties-gtk 
+chmod o-x /usr/bin/update-manager
+chmod o-x /usr/bin/nm-connection-editor
+chmod o-x /usr/bin/gnome-power-statistics
+chmod o-x /usr/bin/gnome-session-properties
+chmod o-x /usr/bin/gnome-system-monitor
+chmod o-x /snap/bin/snap-store
+chmod o-x /snap/bin/firmware-updater
+
 # Anzeige des Benutzernamens auf Hinweis ändern:
 usermod -c "Dieser PC ist aktuell gesperrt" una-user
 exit $?
