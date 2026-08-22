@@ -1,22 +1,20 @@
 # Der Ubuntu Nutzer:innen Arbeitsplatz (UNA)
 
-An den Standorten der Technischen Informationsbibliothek (TIB) steht unseren Nutzer:innen ein neuer Recherche-Arbeitsplatz zur Verfügung, der auf dem Betriebssystem Ubuntu Linux basiert. Damit können sie nicht nur im Internet und in den lizenzierten Angeboten der TIB recherchieren, sondern auch Texte verfassen, Dokumente scannen, eine automatische Texterkennung (OCR) nutzen und drucken. 
+An den Standorten der Technischen Informationsbibliothek (TIB) steht Nutzer:innen ein neuer Recherche-Arbeitsplatz zur Verfügung, der auf dem Betriebssystem Ubuntu Linux basiert. Damit können sie nicht nur im Internet und in den lizenzierten Angeboten der TIB recherchieren, sondern auch Texte verfassen, Dokumente scannen, eine automatische Texterkennung (OCR) nutzen und drucken. 
 
 ![Screenshot vom UNA](UNA.png)
 
 Der Arbeitsplatz besteht aus zwei Hauptkomponenten: 
 
-Das Bibliotheks-PC Login-Management-System **BiblioPC**: Eine Web-Anwendung auf einem zentralen Linux-Server. Sie prüft die Anmeldungen der Nutzer:innen und verwaltet deren individuelle Nutzungszeiten mithilfe einer integrierten Datenbank (SQLite). 
+Das Bibliotheks-PC Login-Management-System **BiblioPC** ist eine Web-Anwendung, die auf einem zentralen Linux-Server läuft. Sie prüft die Anmeldungen der Nutzer:innen und verwaltet deren individuelle Nutzungszeiten mithilfe einer integrierten Datenbank (SQLite). 
 
-Der **Client** vor Ort ist ein öffentlich zugänglicher Linux-Computer. Die Nutzer:innen melden sich dort einfach mit Ihrer Bibliotheksausweisnummer und Ihrem persönlichen Passwort an. Das System gleicht die Daten mit dem Hintergrundsystem ab und startet einen Zeitkontrolle für die Sitzung. Die Zeit läuft ab, bis man sich abmeldet oder die maximale Nutzungsdauer erreicht ist.
+Der **Client** vor Ort ist ein öffentlich zugänglicher Linux-Computer. Die Nutzer:innen melden sich dort einfach mit ihrer Bibliotheksausweisnummer und ihrem persönlichen Passwort an. Das System gleicht die Daten mit der Web-Anwendung ab und startet bei Erfolg eine Zeitkontrolle für die Sitzung. Die Zeit läuft ab, bis sich die Nutzerin wieder abmeldet oder die maximale Nutzungsdauer erreicht ist.
 
 ## Bibliotheks-PC Login-Management-System (BiblioPC)
 
-Die Web-App dient zur Steuerung und Zeitkontrolle von Benutzersitzungen an öffentlich zugänglichen Bibliotheks-PCs. Es bietet eine HTTP-API-Schnittstellen für Client-Anwendungen auf PCs wie dem UNA und ein umfassendes webbasiertes Administrationsportal für das Bibliothekspersonal.
+Die Web-App dient zur Steuerung und Zeitkontrolle von Benutzersitzungen an öffentlich zugänglichen Bibliotheks-PCs. Es bietet eine HTTP-API-Schnittstellen für Client-Anwendungen auf Linux-PCs wie dem UNA und ein umfassendes webbasiertes Administrationsportal für das Bibliothekspersonal. BiblioPC übernimmt dabei folgende Aufgaben:
 
-BiblioPC regelt den Zugang zu Bibliotheks-PCs und übernimmt folgende Aufgaben:
-
-1. **Authentifizierung von Benutzern:**
+1. **Authentifizierung von Benutzer:innen:**
    - Abgleich von Benutzernummer und Passwort über externe Bibliothekssysteme (z. B. GBV / PAIA) oder eine lokale Datenbank.
 2. **Prüfung von Sperren & Berechtigungen:**
    - Ermittlung des Sperrstatus von Bibliotheksausweisen sowie Abgleich mit administrativen Sperrlisten.
@@ -32,36 +30,27 @@ BiblioPC regelt den Zugang zu Bibliotheks-PCs und übernimmt folgende Aufgaben:
 
 ### Einfach starten mit Docker Compose
 
-Wenn auf dem Linux-Server Docker eingerichtet ist, kann einfach mit Docker-Compose und der Python Webapp **BiblioPC** gestartet werden:
+Wenn auf dem Linux-Server Docker eingerichtet ist, kann die Python Webapp **BiblioPC** einfach mit Docker-Compose gestartet werden:
 
 ```bash
 git clone https://github.com/TIBHannover/BiblioPC.git
 ```
 
-Anschließend die Datei mit den Umgebungsvariablen ```.env.example``` unter ```BiblioPC``` in ```.env``` umbenennen und den Inhalt anpassen, z.B. einen eigenen Secret-Key eintragen:
-
-```SECRET_KEY="7dcnc98z4bfaazrg723fnn732z4gdbnma"```
-
-Und die IP-Adresse des eigenen DNS-Servers:
-
-```DNS_SERVER_1=127.0.0.1```
-
-Dann wird der Docker-Container gestartet:
+Anschließend die Datei mit den Umgebungsvariablen `.env.example` unter `BiblioPC` in `.env` umbenennen und den Inhalt anpassen und einen eigenen `SECRET_KEY="7dcnc98z4bfaazrg723fnn732z4gdbnma"` und DNS-Server `DNS_SERVER_1=127.0.0.1` eintragen. Dann wird der Docker-Container gestartet:
 
 ```bash
 sudo docker compose up -d --build
 ```
-Sofern keine Änderungen an den Einstellungen vorgenommen haben, erreichen Sie die Website über die Adresse https://localhost oder Hostname bzw. IP-Adresse des Linux-Servers.
 
-Beim ersten Aufruf zeigt der Browser eine Sicherheitswarnung bezüglich des Zertifikats an. Das liegt daran, dass das Zertifikat vom System selbst ausgestellt ("selbstsigniert") wurde. Diese Warnung kann man bedenkenlos überspringen und die Seite trotzdem öffnen. Soll die Warnmeldung dauerhaft vermieden werden, kann im Ordner ```proxy``` ein Unterordner ```ssl``` angelegt und ein eigenes, vertrauenswürdiges Zertifikat hinterlegt werden.
+Sofern keine weiteren Änderungen an den Einstellungen vorgenommen wurden, ist die Website über die Adresse https://localhost oder dem Hostname bzw. der IP-Adresse des Linux-Servers erreichbar.
 
-Die Zugangsdaten für das Admin-Konto sind in der Datei ```.env``` gespeichert. Die Daten können dort vor dem ersten Start beliebig geändert werden.
+Beim ersten Aufruf zeigt der Browser eine Sicherheitswarnung wegen des Zertifikats an. Das liegt daran, dass das Zertifikat vom System selbst ausgestellt ("selbstsigniert") wurde. Diese Warnung kann man bedenkenlos überspringen und die Seite trotzdem öffnen. Soll die Warnmeldung dauerhaft vermieden werden, kann im Ordner `proxy` ein Unterordner `ssl` angelegt und ein eigenes, vertrauenswürdiges Zertifikat hinterlegt und in der Datei `main.py` der Eintrag `https_only` von `False` auf `True` geändert werden. 
 
-Die Standard-Zugangsdaten sind: Benutzername ```useradmin``` und Passwort ```@ChangeMe@```.
+Die Zugangsdaten für das Admin-Konto sind in der Datei `.env` gespeichert und können vor dem ersten Start beliebig geändert werden. Die Standard-Zugangsdaten sind für den Benutzernamen `useradmin` und das Passwort ist `@ChangeMe@`.
 
 Um schnell zu prüfen, ob die Anmeldung über einen Client grundsätzlich funktioniert, reicht ein einfacher Befehl mit *cURL*:
 
-```
+```bash
 curl -k -X POST https://localhost/ilogin -d bn="99999999" -d pw="testpw123" -d host="lummerland"" -d ip="127.0.0.1"
 curl -k -X POST https://localhost/iloginwh -d "bn=99999999"
 curl -k -X POST https://localhost/ilogout -d host="lummerland"" -d ip="127.0.0.1"
@@ -69,11 +58,11 @@ curl -k -X POST https://localhost/ilogout -d host="lummerland"" -d ip="127.0.0.1
 
 Wenn die BiblioPC-App von einem anderen Rechner (Client) aus getestet werden soll, kann localhost in den Befehlen einfach durch die IP-Adresse oder den Hostnamen des Servers ersetzt werden.
 
-Das Test-Konto (99999999) funktioniert nur, solange in der Datei ```.env``` die Einstellung ```AUTH_METHOD=local``` gesetzt ist. Hinweis zur lokalen Option: Das Modul ```auth_local.py``` dient aktuell als Orientierungshilfe. Es kann für rein lokale Tests weiterentwickelt oder als Vorlage für eigene Anmeldeverfahren genutzt werden.
+Das Test-Konto (99999999) funktioniert nur, solange in der Datei `.env` die Einstellung `AUTH_METHOD=local` gesetzt ist. Das Modul `auth_local.py` dient aktuell als Orientierungshilfe. Es kann für rein lokale Tests weiterentwickelt oder als Vorlage für eigene Anmeldeverfahren genutzt werden.
 
-GBV-Anmeldung (```AUTH_METHOD=gbv```): Wenn stattdessen die Authentifizierung über den Bibliotheksverbund GBV genutzt werden soll, benötigen wird ein gültiges GBV-Benutzerkonto benötigt. Der Ablauf bleibt identisch. Im Hintergrund gleicht das System Ausweisnummer und Passwort über die PAIA-Schnittstelle des GBV unter der Adresse https://paia.gbv.de/<ISIL> ab (hier die eigene ISIL einsetzen, zum Beispiel [https://paia.gbv.de/DE-1/](https://paia.gbv.de/DE-1/)).
+Für die GBV-Anmeldung (`AUTH_METHOD=gbv`), also die Authentifizierung über den Bibliotheksverbund GBV und der PAIA-Schnittstelle, wird ein gültiges GBV-Benutzerkonto benötigt. Ansonsten bleibt der Ablauf identisch. Im Hintergrund gleicht das System dann die Ausweisnummer und das Passwort über die PAIA-API unter der Adresse https://paia.gbv.de/<ISIL> ab (hier die eigene ISIL einsetzen, zum Beispiel [https://paia.gbv.de/DE-1/](https://paia.gbv.de/DE-1/)).
 
-Um den Systemstatus und alle Aktivitäten der Anwendung live im Terminal mitzuverfolgen:
+Über die Logs können der Systemstatus und alle Aktivitäten der Anwendung live im Terminal verfolgt werden:
 
 ```bash
 sudo docker compose logs -f
@@ -81,19 +70,19 @@ sudo docker compose logs -f
 
 ## Der Ubuntu-Client
 
-Als Client-System kann Ubuntu oder jede andere Linux-Distribution genutzt werden. Die aktuellen Skripte sind auf die Desktop-Oberfläche GNOME und deren Anmeldemaske (GNOME Display Manager / GDM) abgestimmt. Für den Testbetrieb kann ohne große Änderungen eine einfache Installation von Ubuntu (Version 24.04 oder 26.04) mit dem Standardbenutzer `una-user` genommen werden. Nach der Grundinstallation werden ein Fernzugriff und ein Administrator-Zugang benötigt. Für den Fernzugriff kann OpenSSH-Server installiert werden, um sich per SSH mit dem Client zu verbinden. Da `una-user` als einfacher Nutzer ohne Administrator-Rechte arbeitet, sollte der root-Account unter Ubuntu dauerhaft freigeschaltet werden (unter anderen Linux-Distributionen ist er meist schon vorhanden):
+Als Client-System kann Ubuntu oder auch jede andere Linux-Distribution genutzt werden. Die aktuellen Skripte sind auf die Desktop-Oberfläche GNOME und deren Anmeldemaske (GNOME Display Manager / GDM3) abgestimmt. Für den Testbetrieb kann ohne große Änderungen eine einfache Installation von Ubuntu (Version 24.04 oder 26.04) mit dem Standardbenutzer `una-user` genommen werden. Nach der Grundinstallation werden ein Fernzugriff und ein Administrator-Zugang benötigt. Für den Fernzugriff kann der OpenSSH-Server installiert werden, um sich per SSH mit dem Client zu verbinden. Da `una-user` als einfacher Nutzer ohne Administrator-Rechte arbeitet, sollte der root-Account unter Ubuntu dauerhaft freigeschaltet werden (bei anderen Linux-Distributionen ist er meist standardmäßig aktiv):
 
 ```bash
 sudo passwd root
 ```
 
-Damit root sich auch per SSH an den Test-Client anmelden kann, wird in der Datei `/etc/ssh/sshd_config` die Zeile `PermitRootLogin` auskommentiert und der Parameter auf `yes` gesetzt.
+Damit root sich auch per SSHan den Test-Client anmelden kann, wird in der Datei `/etc/ssh/sshd_config` die Zeile `PermitRootLogin` auskommentiert und der Parameter auf `yes` gesetzt.
 
 ### Installation des PAM-Moduls
 
-Der flexible Anmeldedienst PAM ist ein zentrales Framework unter Linux, das die Überprüfung von Identitäten und Zugriffsrechten von den eigentlichen Anwendungsprogrammen entkoppelt. Das Skript `una_auth.py` prüft das Passwort und weist die Ausweisnummer automatisch dem festen Systembenutzer `una-user` zu. Es lässt sich bei Bedarf problemlos an andere Login-Manager (wie LightDM) anpassen.
+Der flexible Anmeldedienst PAM ist ein zentrales Framework unter Linux, das die Überprüfung von Identitäten und Zugriffsrechten von den eigentlichen Anwendungsprogrammen entkoppelt. Das Skript `una_auth.py` prüft das Passwort und weist die Ausweisnummer automatisch dem festen Systembenutzer `una-user` zu. Es lässt sich bei Bedarf auch problemlos an andere Login-Manager (wie LightDM) anpassen.
 
-Als root werden `una-user` unter Ubuntu falls nötig die administrativen Rechte entzogen und zusätzliche Programme z.B. für die Authentifizierung über das PAM-Modul installiert:
+Dem Benutzer `una-user` werden, falls nötig, die administrativen Rechte entzogen und danach werden zusätzliche Programme z.B. für die Authentifizierung über das PAM-Modul installiert:
 
 ```bash
 gpasswd -d una-user sudo
@@ -102,14 +91,14 @@ apt-get update && apt-get dist-upgrade
 apt-get install -y curl jq libpam-python python3-tk python3-requests
 ```
 
-Wenn das erledigt ist, wird das PAM-Modul nach `/usr/local/lib/security/` kopiert oder dort erstellt und die Berechtigungen gesetzt:
+Ist das erledigt, wird das PAM-Modul nach `/usr/local/lib/security/una_auth.py` kopiert und die folgenden Berechtigungen gesetzt:
 
 ```bash
 chown root:root /usr/local/lib/security/una_auth.py
 chmod 644 /usr/local/lib/security/una_auth.py
 ```
 
-Die zentrale Konfigurationsdatei für das PAM-System `common-session` muss für das Python-Skript `una_auth.py` vorbereitet werden, indem die beiden Zeilen nach `pam_unix.so` ersetzt werden:
+Die zentrale Konfigurationsdatei für das PAM-System `common-session` muss für das Python-Skript `una_auth.py` vorbereitet werden, indem die beiden Zeilen unter `pam_unix.so` ersetzt werden:
 
 ```
 # and here are more per-package modules (the "Additional" block)
@@ -119,7 +108,7 @@ session required        pam_python.so /usr/local/lib/security/una_auth.py
 # end of pam-auth-update config
 ```
 
-Die JSON-Datei für die Konfiguration des PAM-Moduls wird unter `/usr/local/etc/una-config.json` erstellt. Die URL des Servers muss noch angepasst werden:
+Die JSON-Datei für die Konfiguration des PAM-Moduls wird unter `/usr/local/etc/una-config.json` erstellt. Die URL des Servers muss noch an die richte IP oder vollständigem Hostnamen des Servers angepasst werden:
 
 ```
 {
@@ -130,7 +119,7 @@ Die JSON-Datei für die Konfiguration des PAM-Moduls wird unter `/usr/local/etc/
 }
 ```
 
-Anschlißend muss noch die spezifische PAM-Konfigurationsdatei für den grafischen Anmeldebildschirm ```/etc/pam.d/gdm-password``` angepasst werden. Diese Datei regelt exakt, was passieren muss, wenn ein Benutzer vor dem PC sitzt und Benutzernamen und Passwort eingibt, um sich in die grafische Desktop-Umgebung GNOME einzuloggen.
+Anschließend muss noch die spezifische PAM-Konfigurationsdatei für den grafischen Anmeldebildschirm `/etc/pam.d/gdm-password` angepasst werden. Diese Datei regelt exakt, was passieren muss, wenn ein Benutzer vor dem PC sitzt und Benutzernamen und Passwort eingibt, um sich in die grafische Desktop-Umgebung GNOME einzuloggen.
 
 ```
 #%PAM-1.0
@@ -165,7 +154,7 @@ session   required      pam_limits.so
 @include common-password
 ```
 
-Die Datei ```/etc/pam.d/gnome-screensaver``` klärt, welcher Benutzer angemeldet ist, wenn der Bildschirm entsperrt werden soll. Das darf nur der ursprünglich angemeldete Benutzer:
+Die Datei `/etc/pam.d/gnome-screensaver` klärt, welcher Benutzer angemeldet ist, wenn der Bildschirm entsperrt werden soll. Das darf nur der ursprünglich angemeldete Benutzer:
 
 ```
 #%PAM-1.0
@@ -186,13 +175,13 @@ auth      optional      pam_gnome_keyring.so
 @include common-session
 ```
 
-Zum Schluss soll der Benutzer vom Backend abgemeldet werden, wenn er sich vom Desktop wieder abmeldet. Dazu wird die Datei ```/usr/local/bin/una-reset.sh``` erstellt und ausführbar gemacht:
+Zum Schluss soll der Benutzer vom Backend BiblioPC abgemeldet werden, wenn er sich vom Desktop wieder abmeldet. Dazu wird die Datei `/usr/local/bin/una-reset.sh` erstellt und ausführbar gemacht:
 
 ```bash
 chmod +x /usr/local/bin/una-reset.sh
 ```
 
-Damit das Skript ausgeführt wird, muss es in der Datei ```/etc/gdm3/PostSession/Default``` hinterlegt werden, ein systemweites Shell-Skript, das vom GDM automatisch in dem Moment ausgeführt wird, wenn sich ein Benutzer aus seiner grafischen Desktop-Sitzung abmeldet:
+Damit das Skript ausgeführt wird, muss es in der Datei `/etc/gdm3/PostSession/Default` hinterlegt werden. Das ist ein systemweites Shell-Skript, welches vom GDM automatisch in dem Moment ausgeführt wird, wenn sich eine Benutzerin vom Desktop abmeldet:
 
 ```bash
 #!/bin/sh
@@ -200,7 +189,7 @@ Damit das Skript ausgeführt wird, muss es in der Datei ```/etc/gdm3/PostSession
 exit 0
 ```
 
-Damit es bei den Nutzer:innen nicht zu Verwirrungen kommt, was bei der Anmeldung eingegeben werden muss, wird "Benutzername" im Anmeldebildschirm durch den Text "Bibliotheksausweisnummer" ersetzt. Das Skript ändert die Beschriftung in der Anmeldemaske und Benutzeroberfläche von Ubuntu:
+Damit es bei den Nutzer:innen nicht zu Verwirrungen kommt, was bei der Anmeldung eingegeben werden muss, wird die Zeichenkette "Benutzername" im Anmeldebildschirm durch "Bibliotheksausweisnummer" ersetzt. Das Skript ändert die Beschriftung in der Anmeldemaske und der Benutzeroberfläche von Ubuntu:
 
 ```bash
 apt-get install -y gettext language-pack-de language-pack-en language-pack-gnome-de language-pack-gnome-en
@@ -216,7 +205,7 @@ cp /usr/share/locale-langpack/de/LC_MESSAGES/gnome-shell.mo{,.bak}
 cp /tmp/gnome-shell.mo /usr/share/locale-langpack/de/LC_MESSAGES/gnome-shell.mo
 ```
 
-Die Änderungen können dann mit einem Neustart der Anmeldemaske übernommen werden:
+Die Änderungen werden mit einem Neustart der Anmeldemaske übernommen:
 
 ```bash
 systemctl restart gdm
@@ -226,37 +215,35 @@ Das Skript sollte jedesmal nach einem System-Update von GDM ausgeführt werden, 
 
 ### Sauberer Benutzerordner bei jedem Login
 
-Jede:r Nutzer:in hinterlässt Spuren (Browser-Verläufe, Downloads, gespeicherte Passwörter, persönliche Dokumente) bei der Benutzung des öffentlichen PCs. Durch das Zurücksetzen des Benutzerordners bzw. Home-Verzeichnisses (```/home/una-user```) beim Abmelden wird garantiert, dass der/die nachfolgende Nutzer:in keinen Zugriff auf Daten der vorherigen Session hat. Außerdem können Nutzer:innen das System nicht versehentlich oder absichtlich unbrauchbar machen, z. B. durch das Löschen wichtiger Konfigurationsdateien. Deshalb soll bei jedem Login ein exakt definierter, sauberer Zustand hergestellt werden.
+Jede:r Nutzer:in hinterlässt Spuren (Browser-Verläufe, Downloads, gespeicherte Passwörter, persönliche Dokumente) bei der Benutzung des öffentlichen PCs. Durch das Zurücksetzen des Benutzerordners bzw. Home-Verzeichnisses (`/home/una-user`) beim Abmelden wird garantiert, dass der/die nachfolgende Nutzer:in keinen Zugriff auf Daten der vorherigen Sitzung hat. Außerdem können Nutzer:innen das System nicht versehentlich oder absichtlich unbrauchbar machen, z. B. durch das Löschen wichtiger Konfigurationsdateien. Bei jedem Login wird ein exakt definierter, sauberer Zustand mit einem *OverlayFS* hergestellt. Dabei werden mehrere Verzeichnisse übereinandergelegt, erscheinen aber aus Anwender:innen Sicht als ein Home-Verzeichnis. 
 
-Umgesetzt wird das mit einem *OverlayFS*, das seit Jahren fest im Linux-Kernel integriert ist. OverlayFS legt zwei Verzeichnisse übereinander und präsentiert sie Nutzer:innen als einen einzigen Ordner (```/home/una-user```). 
+Das *Lowerdir* wird als unveränderliche Master-Vorlage auf der Festplatte nach `/opt/una-master` kopiert. Das Verzeichnis enthält das vorgefertigte Home-Verzeichnis (z. B. Standard-Konto-Einstellungen, Default-Browser-Profile, Hintergründe) und wird im laufenden Betrieb nur lesend eingebunden.
 
-Das *Lowerdir* wird als unveränderliche Master-Vorlage auf der Festplatte nach z.B. ```/opt/una-master``` kopiert. Sie enthält das vorgefertigte Home-Verzeichnis (z. B. Standard-Konto-Einstellungen, Default-Browser-Profile, Hintergründe) und wird im laufenden Betrieb nur lesend eingebunden.
+Das *Upperdir* (`/dev/shm/una-upper`) liegt im Arbeitsspeicher (`/dev/shm` ist ein RAM-Disk-Dateisystem). Es nimmt alle Schreibzugriffe auf (z. B. Downloads, geänderte Einstellungen etc.) und wird beim Abmelden gelöscht, wodurch alle Änderungen augenblicklich verloren gehen.
 
-Das *Upperdir* (```/dev/shm/una-upper```) liegt im Arbeitsspeicher (```/dev/shm``` ist ein RAM-Disk-Dateisystem). Es nimmt alle Schreibzugriffe auf (z. B. Downloads, geänderte Einstellungen) und wird beim Abmelden gelöscht, wodurch alle Änderungen augenblicklich verloren gehen.
+Das *Workdir* (`/dev/shm/una-work`) ist ein vom Kernel benötigter Hilfsordner im RAM zur Verwaltung von atomaren Dateisystem-Operationen.
 
-Das *Workdir* (```/dev/shm/una-work```) ist ein vom Kernel benötigter Hilfsordner im RAM zur Verwaltung von atomaren Dateisystem-Operationen.
+Um das OverlayFS nutzen zu können, muss der Ordner für die Master-Vorlage einmalig als root eingerichtet und die Dateien aus einem passend eingerichteten Home-Verzeichnis dorthin kopiert werden. Die einmal erstellte Vorlage kann dann auch auf mehrere Rechner verteilt werden.
 
-Um das OverlayFS nutzen zu können, muss der Ordner für die Master-Vorlage einmalig als root eingerichtet und die Dateien aus einem passend eingerichteten Home-Verzeichnis dorthin kopiert werden.
-
-Zuerst den Ordner für die Master-Vorlage einrichten:
+Zuerst wird der Ordner für die Master-Vorlage eingerichtet:
 
 ```bash
 sudo mkdir -p /opt/una-master
 ```
 
-Dann das Home-Verzeichnis so einrichten, wie der Benutzerordner bei jedem Login aussehen soll (z. B. mit Standard-Lesezeichen im Browser, Vorlagen im Dokumente-Ordner etc.) und anschließend, wenn alles fertig konfiguriert ist, als Benutzer root, das Home-verzeichnis in den Master-Ordner kopieren:
+Dann das Home-Verzeichnis so vorbereitet, wie der Benutzerordner bei jedem Login aussehen soll (z. B. mit bestimmten Apps im Dash, Standard-Lesezeichen im Browser, Vorlagen im Dokumente-Ordner etc.). Wenn alles fertig konfiguriert ist, wird das Home-verzeichnis als root in den Master-Ordner kopiert:
 
 ```bash
 cp -a /home/una-user/. /opt/una-master/
 ```
 
-Sobald ```/opt/una-master``` existiert und befüllt ist, kann das Verzeichnis ```/home/una-user/``` von root gelöscht werden:
+Sobald `/opt/una-master` existiert und befüllt ist, kann das Verzeichnis `/home/una-user/` gelöscht werden:
 
 ```bash
 rm -rf /home/una-user && mkdir /home/una-user
 ```
 
-Im PAM-Modul ```/usr/local/lib/security/una_auth.py``` müssen die folgenden Zeilen für die Sitzungsverwaltung wieder aktiviert bzw. auskommentiert werden:
+Im PAM-Modul `/usr/local/lib/security/una_auth.py` müssen die folgenden Zeilen für die Sitzungsverwaltung aktiviert bzw. auskommentiert werden:
 
 ```python
 def pam_sm_open_session(pamh, flags, argv):
@@ -294,7 +281,7 @@ def pam_sm_close_session(pamh, flags, argv):
     return pamh.PAM_SUCCESS
 ```
 
-Und die letzte Zeile in ```/usr/local/bin/una-reset.sh```, die das Home-Verzeichnis und alle Reste beim Abmelden wieder löscht:
+Sie wurden für die erste Demo einkommentiert, damit der erste Start ohne OverlayFS funktioniert. Außerdem müssen die Kommentarzeichen in der letzten Zeile in `/usr/local/bin/una-reset.sh`, die das Home-Verzeichnis und alle Reste beim Abmelden wieder löscht, entfernt werden:
 
 ```bash
 # Home una-user löschen
@@ -314,7 +301,7 @@ chmod o-x /usr/bin/gnome-session-properties
 chmod o-x /usr/bin/gnome-system-monitor
 ```
 
-Falls Snap nicht zugunsten von Flatpak deinstalliert wurde:
+Falls Snap nicht zugunsten von Flatpak oder etwas anderem deinstalliert oder entfernt wurde:
 
 ```bash
 chmod o-x /snap/bin/snap-store
