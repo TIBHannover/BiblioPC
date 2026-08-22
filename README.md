@@ -70,6 +70,8 @@ sudo docker compose logs -f
 
 ## Der Ubuntu-Client
 
+Das Installationsskript `una-pam-login` unter `Installation` in diesem Repo erstellt alle benötigten Dateien aus dem Verzeichnis `Client`, die hier beschrieben werden, in einem Rutsch. Damit die Anmeldung mit dem Test-Account am UNA funktioniert, muss allerdings das Verzeichnis `/opt/una-master` mit der unveränderliche Master-Vorlage des Home-Verzeichnisses `/home/una-user` bereits angelegt sein, so wie es weiter unten in diesem README beschrieben wird.
+
 Als Client-System kann Ubuntu oder auch jede andere Linux-Distribution genutzt werden. Die aktuellen Skripte sind auf die Desktop-Oberfläche GNOME und deren Anmeldemaske (GNOME Display Manager / GDM3) abgestimmt. Für den Testbetrieb kann ohne große Änderungen eine einfache Installation von Ubuntu (Version 24.04 oder 26.04) mit dem Standardbenutzer `una-user` genommen werden. Nach der Grundinstallation werden ein Fernzugriff und ein Administrator-Zugang benötigt. Für den Fernzugriff kann der OpenSSH-Server installiert werden, um sich per SSH mit dem Client zu verbinden. Da `una-user` als einfacher Nutzer ohne Administrator-Rechte arbeitet, sollte der root-Account unter Ubuntu dauerhaft freigeschaltet werden (bei anderen Linux-Distributionen ist er meist standardmäßig aktiv):
 
 ```bash
