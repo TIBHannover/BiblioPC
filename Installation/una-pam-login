@@ -247,7 +247,6 @@ def pam_sm_open_session(pamh, flags, argv):
             os.makedirs("/dev/shm/una-work", mode=0o755, exist_ok=True)
             
             # 2. Mount-Befehl ausführen (voller Pfad zu /usr/bin/mount ist sicherer)
-            # Wichtig: Wir nutzen die exakt funktionierenden Pfade aus deinem Test
             cmd = [
                 "/usr/bin/mount", "-t", "overlay", "overlay",
                 "-o", "lowerdir=/opt/una-master,upperdir=/dev/shm/una-upper,workdir=/dev/shm/una-work",
