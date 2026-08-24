@@ -237,7 +237,6 @@ Dann das Home-Verzeichnis so vorbereitet, wie der Benutzerordner bei jedem Login
 
 ```bash
 cp -a /home/una-user/. /opt/una-master/
-rm -rf /opt/una-master/.cache
 ```
 
 Sobald `/opt/una-master` existiert und befüllt ist, kann das Verzeichnis `/home/una-user/` gelöscht werden:
