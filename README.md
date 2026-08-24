@@ -233,10 +233,11 @@ Zuerst wird der Ordner für die Master-Vorlage eingerichtet:
 sudo mkdir -p /opt/una-master
 ```
 
-Dann das Home-Verzeichnis so vorbereitet, wie der Benutzerordner bei jedem Login aussehen soll (z. B. mit bestimmten Apps im Dash, Standard-Lesezeichen im Browser, Vorlagen im Dokumente-Ordner etc.). Wenn alles fertig konfiguriert ist, wird das Home-verzeichnis als root in den Master-Ordner kopiert:
+Dann das Home-Verzeichnis so vorbereitet, wie der Benutzerordner bei jedem Login aussehen soll (z. B. mit bestimmten Apps im Dash, Standard-Lesezeichen im Browser, Vorlagen im Dokumente-Ordner etc.). Wenn alles fertig konfiguriert ist, wird das Home-verzeichnis als root in den Master-Ordner kopiert (der Cache wird nicht benötigt):
 
 ```bash
 cp -a /home/una-user/. /opt/una-master/
+rm -rf /opt/una-master/.cache
 ```
 
 Sobald `/opt/una-master` existiert und befüllt ist, kann das Verzeichnis `/home/una-user/` gelöscht werden:
