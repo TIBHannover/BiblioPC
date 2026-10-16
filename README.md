@@ -361,7 +361,7 @@ Damit ist der Ubuntu-Client bereit und kann als öffentlicher Arbeitsplatz genut
 
 Beim Upgrade auf Ubuntu 26.04 wurden die GDM-Hooks PreLogin und PostSession im Rahmen der X11-Bereinigung entfernt *). Dadurch wird `/etc/gdm3/PostSession/Default` und damit `una-reset.sh` nach dem Logout nicht mehr ausgeführt. Als Ersatz wurde der zentrale Reset über `pam_exec` in die PAM-Session-Kette integriert, wobei das Skript ausschließlich bei `PAM_TYPE=close_session` und für die GDM-Dienste `gdm-password` bzw. `gdm-autologin` läuft. Der GDM-Greeter-Dienst `gdm-launch-environment` wird explizit ausgeschlossen, damit dessen Session-Ende keinen zweiten, fehlerhaften Reset mit leeren bzw. veralteten Client-Daten auslöst.
 
-Die Änderungen betreffen: `una-reset.sh`, `una-reset.pam` als neues PAM-Modul und `common-session` um das neue PAM-Modul einzubinden. Die Installation des neuen PAM-Moduls:
+Die Änderungen betreffen: `una-reset.sh`, `una-reset.pam` als neues PAM-Modul und `common-session`, um das neue PAM-Modul einzubinden. Die Installation des neuen PAM-Moduls:
 
 `install -o root -g root -m 0644 una-reset.pam /etc/pam.d/una-reset`
 
