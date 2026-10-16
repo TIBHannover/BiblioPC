@@ -307,6 +307,9 @@ session optional                        pam_umask.so
 session required        pam_unix.so
 session optional        pam_systemd.so
 session required        pam_python.so /usr/local/lib/security/una_auth.py
+
+# una-reset: replacement for removed GDM PostSession hook (Ubuntu 26.04) -- 16.10.2026
+@include una-reset
 # end of pam-auth-update config
 EOF
 
@@ -373,8 +376,7 @@ EOF
 
 cat << 'EOF' > /usr/local/bin/una-reset.sh
 #!/bin/bash
-# Zentraler Reset nach dem Logout einer GDM-Benutzer-Session. Ersetzt den in Ubuntu 26.04 entfernten GDM-PostSession-Hook. -- 16.10.2026
-
+# Zentraler Reset nach dem Logout einer GDM-Benutzer-Session. Ersetzt den in Ubuntu 26.04 entfernten GDM-PostSession-Hook.
 set -u
 
 LOG_FILE="/var/log/una-reset.log"
@@ -467,12 +469,14 @@ rm -f /dev/shm/ip
 log "DONE"
 exit 0
 EOF
-chmod +x /usr/local/bin/una-reset.sh
 
-cat << 'EOF' > /etc/gdm3/PostSession/Default
-#!/bin/sh
-/usr/local/bin/una-reset.sh
-exit 0
+chmod 755 /usr/local/bin/una-reset.sh
+touch /var/log/una-reset.log
+chmod 0640 /var/log/una-reset.log
+
+cat << 'EOF' > /etc/pam.d/una-reset
+# Run una-reset.sh when a GDM session is closed.
+session optional pam_exec.so quiet log=/var/log/una-reset.log /usr/local/bin/una-reset.sh
 EOF
 
 cat << 'EOF' > /usr/local/bin/timer.py
