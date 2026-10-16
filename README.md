@@ -356,3 +356,14 @@ Meldet sich eine Nutzerin an, wird "una-master" zum Home-Verzeichnis "una-user" 
 Falls noch weitere Skripte, Fenster etc. aus dem Autostart gestartet werden sollen, wie z.B. ```hinweis.py```, kann die Datei nach ```/usr/local/bin/hinweis.py``` kopiert werden und den Starter nach ```/opt/una-master/.config/autostart/hinweis.desktop``` und ausführbar machen: ```chmod +x /opt/una-master/.config/autostart/unatimer.desktop```.
 
 Damit ist der Ubuntu-Client bereit und kann als öffentlicher Arbeitsplatz genutzt werden. Weitere Programme, Treiber für Scanner etc. können dann zusätzlich je nach Bedarf installiert werden. 
+
+### --- Änderungen 16.10.2026
+
+Beim Upgrade auf Ubuntu 26.04 wurden die GDM-Hooks PreLogin und PostSession im Rahmen der X11-Bereinigung entfernt *). Dadurch wird `/etc/gdm3/PostSession/Default` und damit `una-reset.sh` nach dem Logout nicht mehr ausgeführt. Als Ersatz wurde der zentrale Reset über `pam_exec` in die PAM-Session-Kette integriert, wobei das Skript ausschließlich bei `PAM_TYPE=close_session` und für die GDM-Dienste `gdm-password` bzw. `gdm-autologin` läuft. Der GDM-Greeter-Dienst `gdm-launch-environment` wird explizit ausgeschlossen, damit dessen Session-Ende keinen zweiten, fehlerhaften Reset mit leeren bzw. veralteten Client-Daten auslöst.
+
+Die Änderungen betreffen: `una-reset.sh`, `una-reset.pam` als neues PAM-Modul und `common-session` um das neue PAM-Modul einzubinden. Die Installation des neuen PAM-Moduls:
+
+`install -o root -g root -m 0644 una-reset.pam /etc/pam.d/una-reset`
+
+
+*) https://documentation.ubuntu.com/release-notes/26.04/changes-since-previous-interim/
