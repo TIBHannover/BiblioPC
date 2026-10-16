@@ -1,0 +1,3 @@
+# Run una-reset.sh when a GDM session is closed.
+# This replaces the removed GDM PostSession hook in Ubuntu 26.04. -- 16.10.2026
+session optional pam_exec.so quiet log=/var/log/una-reset.log /usr/local/bin/una-reset.sh
